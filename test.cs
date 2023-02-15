@@ -3,8 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public enum ItemType
-{
+public enum ItemType {
     Unknown = -2, // Unsupported item type (Forge mod custom item...)
     Null = -1, // Unspecified item type (Used in the network protocol)
 
@@ -1195,8 +1194,7 @@ public enum ItemType
     ZombieVillagerSpawnEgg,
     ZombifiedPiglinSpawnEgg,
 }
-public class Item
-{
+public class Item {
     /// <summary>
     /// Item Type
     /// </summary>
@@ -1218,8 +1216,7 @@ public class Item
     /// <param name="itemType">Type of the item</param>
     /// <param name="count">Item Count</param>
     /// <param name="nbt">Item Metadata</param>
-    public Item(ItemType itemType, int count, Dictionary<string, object>? nbt)
-    {
+    public Item(ItemType itemType, int count, Dictionary<string, object>? nbt) {
         Type = itemType;
         Count = count;
         NBT = nbt;
@@ -1229,25 +1226,20 @@ public class Item
     /// Check if the item slot is empty
     /// </summary>
     /// <returns>TRUE if the item is empty</returns>
-    public bool IsEmpty
-    {
+    public bool IsEmpty {
         get { return Type == ItemType.Air || Count == 0; }
     }
 
     /// <summary>
     /// Retrieve item display name from NBT properties. NULL if no display name is defined.
     /// </summary>
-    public string? DisplayName
-    {
-        get
-        {
-            if (NBT != null && NBT.ContainsKey("display"))
-            {
+    public string? DisplayName {
+        get {
+            if (NBT != null && NBT.ContainsKey("display")) {
                 if (
                     NBT["display"] is Dictionary<string, object> displayProperties
                     && displayProperties.ContainsKey("Name")
-                )
-                {
+                ) {
                     string? displayName = displayProperties["Name"] as string;
                     if (!String.IsNullOrEmpty(displayName))
                         return MinecraftClient.Protocol.ChatParser.ParseText(
@@ -1262,18 +1254,14 @@ public class Item
     /// <summary>
     /// Retrieve item lores from NBT properties. Returns null if no lores is defined.
     /// </summary>
-    public string[]? Lores
-    {
-        get
-        {
+    public string[]? Lores {
+        get {
             List<string> lores = new();
-            if (NBT != null && NBT.ContainsKey("display"))
-            {
+            if (NBT != null && NBT.ContainsKey("display")) {
                 if (
                     NBT["display"] is Dictionary<string, object> displayProperties
                     && displayProperties.ContainsKey("Lore")
-                )
-                {
+                ) {
                     object[] displayName = (object[])displayProperties["Lore"];
                     lores.AddRange(
                         from string st in displayName
@@ -1290,15 +1278,11 @@ public class Item
     /// <summary>
     /// Retrieve item damage from NBT properties. Returns 0 if no damage is defined.
     /// </summary>
-    public int Damage
-    {
-        get
-        {
-            if (NBT != null && NBT.ContainsKey("Damage"))
-            {
+    public int Damage {
+        get {
+            if (NBT != null && NBT.ContainsKey("Damage")) {
                 object damage = NBT["Damage"];
-                if (damage != null)
-                {
+                if (damage != null) {
                     return int.Parse(damage.ToString() ?? string.Empty);
                 }
             }
@@ -1306,8 +1290,7 @@ public class Item
         }
     }
 
-    public override string ToString()
-    {
+    public override string ToString() {
         StringBuilder sb = new();
 
         sb.AppendFormat("x{0,-2} {1}", Count, Type.ToString());
@@ -1323,13 +1306,11 @@ public class Item
         return sb.ToString();
     }
 }
-public enum Hand
-{
+public enum Hand {
     MainHand = 0,
     OffHand = 1,
 }
-public class Container
-{
+public class Container {
     /// <summary>
     /// ID of the container on the server
     /// </summary>
@@ -1368,8 +1349,7 @@ public class Container
     /// <param name="id">Container ID</param>
     /// <param name="type">Container Type</param>
     /// <param name="title">Container Title</param>
-    public Container(int id, ContainerType type, string title)
-    {
+    public Container(int id, ContainerType type, string title) {
         ID = id;
         Type = type;
         Title = title;
@@ -1384,8 +1364,7 @@ public class Container
     /// <param name="type">Container Type</param>
     /// <param name="title">Container Title</param>
     /// <param name="items">Container Items (key: slot ID, value: item info)</param>
-    public Container(int id, ContainerType type, string? title, Dictionary<int, Item> items)
-    {
+    public Container(int id, ContainerType type, string? title, Dictionary<int, Item> items) {
         ID = id;
         Type = type;
         Title = title;
@@ -1399,8 +1378,7 @@ public class Container
     /// <param name="id">Container ID</param>
     /// <param name="type">Container Type</param>
     /// <param name="title">Container title</param>
-    public Container(int id, ContainerTypeOld type, string title)
-    {
+    public Container(int id, ContainerTypeOld type, string title) {
         ID = id;
         Title = title;
         Type = ConvertType.ToNew(type);
@@ -1414,8 +1392,7 @@ public class Container
     /// <param name="id">Container ID</param>
     /// <param name="typeID">Container Type</param>
     /// <param name="title">Container Title</param>
-    public Container(int id, int typeID, string title)
-    {
+    public Container(int id, int typeID, string title) {
         ID = id;
         Type = GetContainerType(typeID);
         Title = title;
@@ -1427,8 +1404,7 @@ public class Container
     /// Create an empty container with Type
     /// </summary>
     /// <param name="type">Container Type</param>
-    public Container(ContainerType type)
-    {
+    public Container(ContainerType type) {
         ID = -1;
         Type = type;
         Title = null;
@@ -1441,8 +1417,7 @@ public class Container
     /// </summary>
     /// <param name="type">Container Type</param>
     /// <param name="items">Container Items (key: slot ID, value: item info)</param>
-    public Container(ContainerType type, Dictionary<int, Item> items)
-    {
+    public Container(ContainerType type, Dictionary<int, Item> items) {
         ID = -1;
         Type = type;
         Title = null;
@@ -1455,11 +1430,9 @@ public class Container
     /// </summary>
     /// <param name="typeID">Container Type ID</param>
     /// <returns>Container Type</returns>
-    public static ContainerType GetContainerType(int typeID)
-    {
+    public static ContainerType GetContainerType(int typeID) {
         // https://wiki.vg/Inventory didn't state the inventory ID, assume that list start with 0
-        return typeID switch
-        {
+        return typeID switch {
             0 => ContainerType.Generic_9x1,
             1 => ContainerType.Generic_9x2,
             2 => ContainerType.Generic_9x3,
@@ -1492,13 +1465,10 @@ public class Container
     /// </summary>
     /// <param name="itemType">The item to search</param>
     /// <returns>An array of slot ID</returns>
-    public int[] SearchItem(ItemType itemType)
-    {
+    public int[] SearchItem(ItemType itemType) {
         List<int> result = new();
-        if (Items != null)
-        {
-            foreach (var item in Items)
-            {
+        if (Items != null) {
+            foreach (var item in Items) {
                 if (item.Value.Type == itemType)
                     result.Add(item.Key);
             }
@@ -1511,15 +1481,12 @@ public class Container
     /// </summary>
     /// <returns>An array of slot ID</returns>
     /// <remarks>Also depending on the container type, some empty slots cannot be used e.g. armor slots. This might cause issues.</remarks>
-    public int[] GetEmpytSlots()
-    {
+    public int[] GetEmpytSlots() {
         List<int> result = new();
-        for (int i = 0; i < Type.SlotCount(); i++)
-        {
+        for (int i = 0; i < Type.SlotCount(); i++) {
             result.Add(i);
         }
-        foreach (var item in Items)
-        {
+        foreach (var item in Items) {
             result.Remove(item.Key);
         }
         return result.ToArray();
@@ -1531,28 +1498,22 @@ public class Container
     /// <param name="slotId">The slot ID to check</param>
     /// <param name="hotbar">Zero-based, 0-8. -1 if not a hotbar</param>
     /// <returns>True if given slot ID is a hotbar slot</returns>
-    public bool IsHotbar(int slotId, out int hotbar)
-    {
+    public bool IsHotbar(int slotId, out int hotbar) {
         int hotbarStart = Type.SlotCount() - 9;
         // Remove offhand slot
         if (Type == ContainerType.PlayerInventory)
             hotbarStart--;
-        if ((slotId >= hotbarStart) && (slotId <= hotbarStart + 9))
-        {
+        if ((slotId >= hotbarStart) && (slotId <= hotbarStart + 9)) {
             hotbar = slotId - hotbarStart;
             return true;
-        }
-        else
-        {
+        } else {
             hotbar = -1;
             return false;
         }
     }
 }
-public abstract class ChatBot
-{
-    public enum DisconnectReason
-    {
+public abstract class ChatBot {
+    public enum DisconnectReason {
         InGameKick,
         LoginRejected,
         ConnectionLost,
@@ -1560,29 +1521,24 @@ public abstract class ChatBot
     };
 
     //Handler will be automatically set on bot loading, don't worry about this
-    public void SetHandler(McClient handler)
-    {
+    public void SetHandler(McClient handler) {
         _handler = handler;
     }
 
-    protected void SetMaster(ChatBot master)
-    {
+    protected void SetMaster(ChatBot master) {
         this.master = master;
     }
 
-    protected void LoadBot(ChatBot bot)
-    {
+    protected void LoadBot(ChatBot bot) {
         Handler.BotUnLoad(bot);
         Handler.BotLoad(bot);
     }
 
-    protected List<ChatBot> GetLoadedChatBots()
-    {
+    protected List<ChatBot> GetLoadedChatBots() {
         return Handler.GetLoadedChatBots();
     }
 
-    protected void UnLoadBot(ChatBot bot)
-    {
+    protected void UnLoadBot(ChatBot bot) {
         Handler.BotUnLoad(bot);
     }
 
@@ -1591,10 +1547,8 @@ public abstract class ChatBot
     private readonly List<string> registeredPluginChannels = new();
     private readonly object delayTasksLock = new();
     private readonly List<TaskWithDelay> delayedTasks = new();
-    protected McClient Handler
-    {
-        get
-        {
+    protected McClient Handler {
+        get {
             if (master != null)
                 return master.Handler;
             if (_handler != null)
@@ -1609,26 +1563,19 @@ public abstract class ChatBot
     /// <remarks>
     /// <see cref="Update"/> method can be overridden by child class so need an extra update method
     /// </remarks>
-    public void UpdateInternal()
-    {
-        lock (delayTasksLock)
-        {
-            if (delayedTasks.Count > 0)
-            {
+    public void UpdateInternal() {
+        lock (delayTasksLock) {
+            if (delayedTasks.Count > 0) {
                 List<int> tasksToRemove = new();
-                for (int i = 0; i < delayedTasks.Count; i++)
-                {
-                    if (delayedTasks[i].Tick())
-                    {
+                for (int i = 0; i < delayedTasks.Count; i++) {
+                    if (delayedTasks[i].Tick()) {
                         delayedTasks[i].Task();
                         tasksToRemove.Add(i);
                     }
                 }
-                if (tasksToRemove.Count > 0)
-                {
+                if (tasksToRemove.Count > 0) {
                     tasksToRemove.Sort((a, b) => b.CompareTo(a)); // descending sort
-                    foreach (int index in tasksToRemove)
-                    {
+                    foreach (int index in tasksToRemove) {
                         delayedTasks.RemoveAt(index);
                     }
                 }
@@ -1705,8 +1652,7 @@ public abstract class ChatBot
     /// <param name="reason">Disconnect Reason</param>
     /// <param name="message">Kick message, if any</param>
     /// <returns>Return TRUE if the client is about to restart</returns>
-    public virtual bool OnDisconnect(DisconnectReason reason, string message)
-    {
+    public virtual bool OnDisconnect(DisconnectReason reason, string message) {
         return false;
     }
 
@@ -1755,8 +1701,7 @@ public abstract class ChatBot
         string commandName,
         string commandParams,
         CmdResult Result
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when an entity spawned nearby
@@ -1827,8 +1772,7 @@ public abstract class ChatBot
         string playername,
         Guid uuid,
         int latency
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when an update of the map is sent by the server, take a look at https://wiki.vg/Protocol#Map_Data for more info on the fields
@@ -1855,8 +1799,7 @@ public abstract class ChatBot
         byte mapCoulmnX,
         byte mapRowZ,
         byte[]? colors
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when tradeList is received from server
@@ -1868,8 +1811,7 @@ public abstract class ChatBot
         int windowID,
         List<VillagerTrade> trades,
         VillagerInfo villagerInfo
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when received a title from the server
@@ -1890,8 +1832,7 @@ public abstract class ChatBot
         int stay,
         int fadeout,
         string json
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when an entity equipped
@@ -1915,8 +1856,7 @@ public abstract class ChatBot
         int amplifier,
         int duration,
         byte flags
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when a scoreboard objective updated
@@ -1931,8 +1871,7 @@ public abstract class ChatBot
         string objectivevalue,
         int type,
         string json
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when a scoreboard updated
@@ -1946,8 +1885,7 @@ public abstract class ChatBot
         int action,
         string objectivename,
         int value
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when an inventory/container was updated by server
@@ -1979,8 +1917,7 @@ public abstract class ChatBot
         byte inventoryID,
         short propertyId,
         short propertyValue
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// When received enchantments from the server this method is called
@@ -2006,8 +1943,7 @@ public abstract class ChatBot
         short topEnchantmentLevelRequirement,
         short middleEnchantmentLevelRequirement,
         short bottomEnchantmentLevelRequirement
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// When received enchantments from the server this method is called
@@ -2084,8 +2020,7 @@ public abstract class ChatBot
         List<byte> packetData,
         bool isLogin,
         bool isInbound
-    )
-    { }
+    ) { }
 
     /// <summary>
     /// Called when the rain level have been changed
@@ -2118,8 +2053,7 @@ public abstract class ChatBot
     /// <param name="text">Text to send to the server</param>
     /// <param name="sendImmediately">Bypass send queue (Deprecated, still there for compatibility purposes but ignored)</param>
     /// <returns>TRUE if successfully sent (Deprectated, always returns TRUE for compatibility purposes with existing scripts)</returns>
-    protected bool SendText(string text, bool sendImmediately = false)
-    {
+    protected bool SendText(string text, bool sendImmediately = false) {
         LogToConsole("Sending '" + text + "'");
         Handler.SendText(text);
         return true;
@@ -2134,8 +2068,7 @@ public abstract class ChatBot
     protected bool PerformInternalCommand(
         string command,
         Dictionary<string, object>? localVars = null
-    )
-    {
+    ) {
         CmdResult temp = new();
         return Handler.PerformInternalCommand(command, ref temp, localVars);
     }
@@ -2151,16 +2084,14 @@ public abstract class ChatBot
         string command,
         ref CmdResult result,
         Dictionary<string, object>? localVars = null
-    )
-    {
+    ) {
         return Handler.PerformInternalCommand(command, ref result, localVars);
     }
 
     /// <summary>
     /// Remove color codes ("§c") from a text message received from the server
     /// </summary>
-    public static string GetVerbatim(string? text)
-    {
+    public static string GetVerbatim(string? text) {
         if (string.IsNullOrEmpty(text))
             return string.Empty;
 
@@ -2179,8 +2110,7 @@ public abstract class ChatBot
     /// <summary>
     /// Verify that a string contains only a-z A-Z 0-9 and _ characters.
     /// </summary>
-    public static bool IsValidName(string username)
-    {
+    public static bool IsValidName(string username) {
         if (string.IsNullOrEmpty(username))
             return false;
 
@@ -2198,19 +2128,16 @@ public abstract class ChatBot
     /// <param name="message">if it's a private message, this will contain the message</param>
     /// <param name="sender">if it's a private message, this will contain the player name that sends the message</param>
     /// <returns>Returns true if the text is a private message</returns>
-    protected static bool IsPrivateMessage(string text, ref string message, ref string sender)
-    {
+    protected static bool IsPrivateMessage(string text, ref string message, ref string sender) {
         if (string.IsNullOrEmpty(text))
             return false;
 
         text = GetVerbatim(text);
 
         //User-defined regex for private chat messages
-        if (Config.ChatFormat.UserDefined && !string.IsNullOrWhiteSpace(Config.ChatFormat.Private))
-        {
+        if (Config.ChatFormat.UserDefined && !string.IsNullOrWhiteSpace(Config.ChatFormat.Private)) {
             Match regexMatch = Regex.Match(text, Config.ChatFormat.Private);
-            if (regexMatch.Success && regexMatch.Groups.Count >= 3)
-            {
+            if (regexMatch.Success && regexMatch.Groups.Count >= 3) {
                 sender = regexMatch.Groups[1].Value;
                 message = regexMatch.Groups[2].Value;
                 return IsValidName(sender);
@@ -2218,21 +2145,16 @@ public abstract class ChatBot
         }
 
         //Built-in detection routine for private messages
-        if (Config.ChatFormat.Builtins)
-        {
+        if (Config.ChatFormat.Builtins) {
             string[] tmp = text.Split(' ');
-            try
-            {
+            try {
                 //Detect vanilla /tell messages
                 //Someone whispers message (MC 1.5)
                 //Someone whispers to you: message (MC 1.7)
-                if (tmp.Length > 2 && tmp[1] == "whispers")
-                {
-                    if (tmp.Length > 4 && tmp[2] == "to" && tmp[3] == "you:")
-                    {
+                if (tmp.Length > 2 && tmp[1] == "whispers") {
+                    if (tmp.Length > 4 && tmp[2] == "to" && tmp[3] == "you:") {
                         message = text[(tmp[0].Length + 18)..]; //MC 1.7
-                    }
-                    else
+                    } else
                         message = text[(tmp[0].Length + 10)..]; //MC 1.5
                     sender = tmp[0];
                     return IsValidName(sender);
@@ -2249,8 +2171,7 @@ public abstract class ChatBot
                 {
                     message = text[(tmp[0].Length + 4 + tmp[2].Length + 1)..];
                     sender = tmp[0][1..];
-                    if (sender[0] == '~')
-                    {
+                    if (sender[0] == '~') {
                         sender = sender[1..];
                     }
                     return IsValidName(sender);
@@ -2266,8 +2187,7 @@ public abstract class ChatBot
                 {
                     message = text[(tmp[0].Length + 4 + tmp[2].Length + 0)..];
                     sender = tmp[0][1..];
-                    if (sender[0] == '~')
-                    {
+                    if (sender[0] == '~') {
                         sender = sender[1..];
                     }
                     return IsValidName(sender);
@@ -2282,12 +2202,10 @@ public abstract class ChatBot
                     && tmp.Length > 4
                     && tmp[2] == "->"
                     && (tmp[3].ToLower() == "me]" || tmp[3].ToLower() == "moi]")
-                )
-                {
+                ) {
                     message = text[(tmp[0].Length + 1 + tmp[1].Length + 4 + tmp[3].Length + 1)..];
                     sender = tmp[1][1..];
-                    if (sender[0] == '~')
-                    {
+                    if (sender[0] == '~') {
                         sender = sender[1..];
                     }
                     return IsValidName(sender);
@@ -2300,32 +2218,24 @@ public abstract class ChatBot
                     && tmp.Length > 3
                     && tmp[2] == "->"
                     && (tmp[3].ToLower() == "me]" || tmp[3].ToLower() == "moi]")
-                )
-                {
+                ) {
                     message = text[(tmp[0].Length + 1 + tmp[1].Length + 4 + tmp[2].Length + 1)..];
                     sender = tmp[0][1..];
-                    if (sender[0] == '~')
-                    {
+                    if (sender[0] == '~') {
                         sender = sender[1..];
                     }
                     return IsValidName(sender);
                 }
                 //Detect HeroChat PMsend
                 //From Someone: message
-                else if (text.StartsWith("From "))
-                {
+                else if (text.StartsWith("From ")) {
                     sender = text[5..].Split(':')[0];
                     message = text[(text.IndexOf(':') + 2)..];
                     return IsValidName(sender);
-                }
-                else
+                } else
                     return false;
-            }
-            catch (IndexOutOfRangeException)
-            { /* Not an expected chat format */
-            }
-            catch (ArgumentOutOfRangeException)
-            { /* Same here */
+            } catch (IndexOutOfRangeException) { /* Not an expected chat format */
+            } catch (ArgumentOutOfRangeException) { /* Same here */
             }
         }
 
@@ -2339,19 +2249,16 @@ public abstract class ChatBot
     /// <param name="message">if it's message, this will contain the message</param>
     /// <param name="sender">if it's message, this will contain the player name that sends the message</param>
     /// <returns>Returns true if the text is a chat message</returns>
-    protected static bool IsChatMessage(string text, ref string message, ref string sender)
-    {
+    protected static bool IsChatMessage(string text, ref string message, ref string sender) {
         if (string.IsNullOrEmpty(text))
             return false;
 
         text = GetVerbatim(text);
 
         //User-defined regex for public chat messages
-        if (Config.ChatFormat.UserDefined && !string.IsNullOrWhiteSpace(Config.ChatFormat.Public))
-        {
+        if (Config.ChatFormat.UserDefined && !string.IsNullOrWhiteSpace(Config.ChatFormat.Public)) {
             Match regexMatch = Regex.Match(text, Config.ChatFormat.Public);
-            if (regexMatch.Success && regexMatch.Groups.Count >= 3)
-            {
+            if (regexMatch.Success && regexMatch.Groups.Count >= 3) {
                 sender = regexMatch.Groups[1].Value;
                 message = regexMatch.Groups[2].Value;
                 return IsValidName(sender);
@@ -2359,8 +2266,7 @@ public abstract class ChatBot
         }
 
         //Built-in detection routine for public messages
-        if (Config.ChatFormat.Builtins)
-        {
+        if (Config.ChatFormat.Builtins) {
             string[] tmp = text.Split(' ');
 
             //Detect vanilla/factions Messages
@@ -2368,51 +2274,37 @@ public abstract class ChatBot
             //<*Faction Someone> message
             //<*Faction Someone>: message
             //<*Faction ~Nicknamed>: message
-            if (text[0] == '<')
-            {
-                try
-                {
+            if (text[0] == '<') {
+                try {
                     text = text[1..];
                     string[] tmp2 = text.Split('>');
                     sender = tmp2[0];
                     message = text[(sender.Length + 2)..];
-                    if (message.Length > 1 && message[0] == ' ')
-                    {
+                    if (message.Length > 1 && message[0] == ' ') {
                         message = message[1..];
                     }
                     tmp2 = sender.Split(' ');
                     sender = tmp2[^1];
-                    if (sender[0] == '~')
-                    {
+                    if (sender[0] == '~') {
                         sender = sender[1..];
                     }
                     return IsValidName(sender);
-                }
-                catch (IndexOutOfRangeException)
-                { /* Not a vanilla/faction message */
-                }
-                catch (ArgumentOutOfRangeException)
-                { /* Same here */
+                } catch (IndexOutOfRangeException) { /* Not a vanilla/faction message */
+                } catch (ArgumentOutOfRangeException) { /* Same here */
                 }
             }
             //Detect HeroChat Messages
             //Public chat messages
             //[Channel] [Rank] User: Message
-            else if (text[0] == '[' && text.Contains(':') && tmp.Length > 2)
-            {
-                try
-                {
+            else if (text[0] == '[' && text.Contains(':') && tmp.Length > 2) {
+                try {
                     int name_end = text.IndexOf(':');
                     int name_start = text[..name_end].LastIndexOf(']') + 2;
                     sender = text[name_start..name_end];
                     message = text[(name_end + 2)..];
                     return IsValidName(sender);
-                }
-                catch (IndexOutOfRangeException)
-                { /* Not a herochat message */
-                }
-                catch (ArgumentOutOfRangeException)
-                { /* Same here */
+                } catch (IndexOutOfRangeException) { /* Not a herochat message */
+                } catch (ArgumentOutOfRangeException) { /* Same here */
                 }
             }
             //Detect (Unknown Plugin) Messages
@@ -2429,10 +2321,8 @@ public abstract class ChatBot
                 && text.IndexOf('<') < text.IndexOf('>')
                 && text.IndexOf('>') < text.IndexOf(' ')
                 && text.IndexOf(' ') < text.IndexOf(':')
-            )
-            {
-                try
-                {
+            ) {
+                try {
                     string prefix = tmp[0];
                     string user = tmp[1];
                     string semicolon = tmp[2];
@@ -2443,17 +2333,12 @@ public abstract class ChatBot
                                 || new char[] { '*', '<', '>', '_' }.Contains(c)
                         )
                         && semicolon == ":"
-                    )
-                    {
+                    ) {
                         message = text[(prefix.Length + user.Length + 4)..];
                         return IsValidName(user);
                     }
-                }
-                catch (IndexOutOfRangeException)
-                { /* Not a <unknown plugin> message */
-                }
-                catch (ArgumentOutOfRangeException)
-                { /* Same here */
+                } catch (IndexOutOfRangeException) { /* Not a <unknown plugin> message */
+                } catch (ArgumentOutOfRangeException) { /* Same here */
                 }
             }
         }
@@ -2467,8 +2352,7 @@ public abstract class ChatBot
     /// <param name="text">Text to parse</param>
     /// <param name="sender">Will contain the sender's username, if it's a teleport request</param>
     /// <returns>Returns true if the text is a teleport request</returns>
-    protected static bool IsTeleportRequest(string text, ref string sender)
-    {
+    protected static bool IsTeleportRequest(string text, ref string sender) {
         if (string.IsNullOrEmpty(text))
             return false;
 
@@ -2478,19 +2362,16 @@ public abstract class ChatBot
         if (
             Config.ChatFormat.UserDefined
             && !string.IsNullOrWhiteSpace(Config.ChatFormat.TeleportRequest)
-        )
-        {
+        ) {
             Match regexMatch = Regex.Match(text, Config.ChatFormat.TeleportRequest);
-            if (regexMatch.Success && regexMatch.Groups.Count >= 2)
-            {
+            if (regexMatch.Success && regexMatch.Groups.Count >= 2) {
                 sender = regexMatch.Groups[1].Value;
                 return IsValidName(sender);
             }
         }
 
         //Built-in detection routine for teleport requests
-        if (Config.ChatFormat.Builtins)
-        {
+        if (Config.ChatFormat.Builtins) {
             string[] tmp = text.Split(' ');
 
             //Detect Essentials teleport requests, prossibly with
@@ -2498,8 +2379,7 @@ public abstract class ChatBot
             if (
                 text.EndsWith("has requested to teleport to you.")
                 || text.EndsWith("has requested that you teleport to them.")
-            )
-            {
+            ) {
                 //<Rank> Username has requested...
                 //[Rank] Username has requested...
                 if (
@@ -2529,8 +2409,7 @@ public abstract class ChatBot
     /// Write some text in the console. Nothing will be sent to the server.
     /// </summary>
     /// <param name="text">Log text to write</param>
-    protected void LogToConsole(object? text)
-    {
+    protected void LogToConsole(object? text) {
         string botName =
             Translations.ResourceManager.GetString("botname." + GetType().Name) ?? GetType().Name;
         if (_handler == null || master == null)
@@ -2539,24 +2418,16 @@ public abstract class ChatBot
             Handler.Log.Info(string.Format("[{0}] {1}", botName, text));
         string logfile = Config.AppVar.ExpandVars(Config.Main.Advanced.ChatbotLogFile);
 
-        if (!string.IsNullOrEmpty(logfile))
-        {
-            if (!File.Exists(logfile))
-            {
-                try
-                {
+        if (!string.IsNullOrEmpty(logfile)) {
+            if (!File.Exists(logfile)) {
+                try {
                     Directory.CreateDirectory(Path.GetDirectoryName(logfile)!);
-                }
-                catch
-                {
+                } catch {
                     return; /* Invalid path or access denied */
                 }
-                try
-                {
+                try {
                     File.WriteAllText(logfile, "");
-                }
-                catch
-                {
+                } catch {
                     return; /* Invalid file name or access denied */
                 }
             }
@@ -2565,30 +2436,21 @@ public abstract class ChatBot
         }
     }
 
-    protected static void LogToConsole(string originBotName, object? text)
-    {
+    protected static void LogToConsole(string originBotName, object? text) {
         string botName = Translations.ResourceManager.GetString(originBotName) ?? originBotName;
         ConsoleIO.WriteLogLine(string.Format("[{0}] {1}", botName, text));
         string logfile = Config.AppVar.ExpandVars(Config.Main.Advanced.ChatbotLogFile);
 
-        if (!string.IsNullOrEmpty(logfile))
-        {
-            if (!File.Exists(logfile))
-            {
-                try
-                {
+        if (!string.IsNullOrEmpty(logfile)) {
+            if (!File.Exists(logfile)) {
+                try {
                     Directory.CreateDirectory(Path.GetDirectoryName(logfile)!);
-                }
-                catch
-                {
+                } catch {
                     return; /* Invalid path or access denied */
                 }
-                try
-                {
+                try {
                     File.WriteAllText(logfile, "");
-                }
-                catch
-                {
+                } catch {
                     return; /* Invalid file name or access denied */
                 }
             }
@@ -2601,8 +2463,7 @@ public abstract class ChatBot
     /// Write some text in the console, but only if DebugMessages is enabled in INI file. Nothing will be sent to the server.
     /// </summary>
     /// <param name="text">Debug log text to write</param>
-    protected void LogDebugToConsole(object text)
-    {
+    protected void LogDebugToConsole(object text) {
         if (Config.Logging.DebugMessages)
             LogToConsole(text);
     }
@@ -2612,8 +2473,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="key">Translation key</param>
     /// <param name="args"></param>
-    protected void LogToConsoleTranslated(string key, params object[] args)
-    {
+    protected void LogToConsoleTranslated(string key, params object[] args) {
         LogToConsole(string.Format(Translations.ResourceManager.GetString(key) ?? key, args));
     }
 
@@ -2622,8 +2482,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="key">Translation key</param>
     /// <param name="args"></param>
-    protected void LogDebugToConsoleTranslated(string key, params object?[] args)
-    {
+    protected void LogDebugToConsoleTranslated(string key, params object?[] args) {
         LogDebugToConsole(string.Format(Translations.ResourceManager.GetString(key) ?? key, args));
     }
 
@@ -2637,10 +2496,8 @@ public abstract class ChatBot
         int ExtraAttempts = 3,
         int delaySeconds = 0,
         bool keepAccountAndServerSettings = false
-    )
-    {
-        if (Config.Logging.DebugMessages)
-        {
+    ) {
+        if (Config.Logging.DebugMessages) {
             string botName =
                 Translations.ResourceManager.GetString("botname." + GetType().Name)
                 ?? GetType().Name;
@@ -2653,16 +2510,14 @@ public abstract class ChatBot
     /// <summary>
     /// Disconnect from the server and exit the program
     /// </summary>
-    protected void DisconnectAndExit()
-    {
+    protected void DisconnectAndExit() {
         Program.Exit();
     }
 
     /// <summary>
     /// Unload the chatbot, and release associated memory.
     /// </summary>
-    protected void UnloadBot()
-    {
+    protected void UnloadBot() {
         Handler.BotUnLoad(this);
     }
 
@@ -2671,8 +2526,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="player">Player name</param>
     /// <param name="message">Message</param>
-    protected void SendPrivateMessage(string player, string message)
-    {
+    protected void SendPrivateMessage(string player, string message) {
         SendText(
             string.Format("/{0} {1} {2}", Config.Main.Advanced.PrivateMsgsCmdName, player, message)
         );
@@ -2688,8 +2542,7 @@ public abstract class ChatBot
         string filename,
         string? playername = null,
         Dictionary<string, object>? localVars = null
-    )
-    {
+    ) {
         Handler.BotLoad(new ChatBots.Script(filename, playername, localVars));
     }
 
@@ -2697,8 +2550,7 @@ public abstract class ChatBot
     /// Load an additional ChatBot
     /// </summary>
     /// <param name="chatBot">ChatBot to load</param>
-    protected void BotLoad(ChatBot chatBot)
-    {
+    protected void BotLoad(ChatBot chatBot) {
         Handler.BotLoad(chatBot);
     }
 
@@ -2706,8 +2558,7 @@ public abstract class ChatBot
     /// Check whether Terrain and Movements is enabled.
     /// </summary>
     /// <returns>Enable status.</returns>
-    public bool GetTerrainEnabled()
-    {
+    public bool GetTerrainEnabled() {
         return Handler.GetTerrainEnabled();
     }
 
@@ -2717,8 +2568,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="enabled">Enabled</param>
     /// <returns>TRUE if the setting was applied immediately, FALSE if delayed.</returns>
-    public bool SetTerrainEnabled(bool enabled)
-    {
+    public bool SetTerrainEnabled(bool enabled) {
         return Handler.SetTerrainEnabled(enabled);
     }
 
@@ -2727,16 +2577,14 @@ public abstract class ChatBot
     /// </summary>
     /// <returns></returns>
     /// <remarks>Entity Handling cannot be enabled in runtime (or after joining server)</remarks>
-    public bool GetEntityHandlingEnabled()
-    {
+    public bool GetEntityHandlingEnabled() {
         return Handler.GetEntityHandlingEnabled();
     }
 
     /// <summary>
     /// start Sneaking
     /// </summary>
-    protected bool Sneak(bool on)
-    {
+    protected bool Sneak(bool on) {
         return SendEntityAction(
             on ? Protocol.EntityActionType.StartSneaking : Protocol.EntityActionType.StopSneaking
         );
@@ -2745,8 +2593,7 @@ public abstract class ChatBot
     /// <summary>
     /// Send Entity Action
     /// </summary>
-    private bool SendEntityAction(Protocol.EntityActionType entityAction)
-    {
+    private bool SendEntityAction(Protocol.EntityActionType entityAction) {
         return Handler.SendEntityAction(entityAction);
     }
 
@@ -2756,16 +2603,14 @@ public abstract class ChatBot
     /// <param name="location">Location of block to dig</param>
     /// <param name="swingArms">Also perform the "arm swing" animation</param>
     /// <param name="lookAtBlock">Also look at the block before digging</param>
-    protected bool DigBlock(Location location, bool swingArms = true, bool lookAtBlock = true)
-    {
+    protected bool DigBlock(Location location, bool swingArms = true, bool lookAtBlock = true) {
         return Handler.DigBlock(location, swingArms, lookAtBlock);
     }
 
     /// <summary>
     /// SetSlot
     /// </summary>
-    protected void SetSlot(int slotNum)
-    {
+    protected void SetSlot(int slotNum) {
         Handler.ChangeSlot((short)slotNum);
     }
 
@@ -2773,8 +2618,7 @@ public abstract class ChatBot
     /// Get the current Minecraft World
     /// </summary>
     /// <returns>Minecraft world or null if associated setting is disabled</returns>
-    protected World GetWorld()
-    {
+    protected World GetWorld() {
         return Handler.GetWorld();
     }
 
@@ -2782,8 +2626,7 @@ public abstract class ChatBot
     /// Get all Entities
     /// </summary>
     /// <returns>All Entities</returns>
-    protected Dictionary<int, Entity> GetEntities()
-    {
+    protected Dictionary<int, Entity> GetEntities() {
         return Handler.GetEntities();
     }
 
@@ -2791,8 +2634,7 @@ public abstract class ChatBot
     /// Get all players Latency
     /// </summary>
     /// <returns>All players latency</returns>
-    protected Dictionary<string, int> GetPlayersLatency()
-    {
+    protected Dictionary<string, int> GetPlayersLatency() {
         return Handler.GetPlayersLatency();
     }
 
@@ -2800,8 +2642,7 @@ public abstract class ChatBot
     /// Get the current location of the player (Feet location)
     /// </summary>
     /// <returns>Minecraft world or null if associated setting is disabled</returns>
-    protected Location GetCurrentLocation()
-    {
+    protected Location GetCurrentLocation() {
         return Handler.GetCurrentLocation();
     }
 
@@ -2823,8 +2664,7 @@ public abstract class ChatBot
         int maxOffset = 0,
         int minOffset = 0,
         TimeSpan? timeout = null
-    )
-    {
+    ) {
         return Handler.MoveTo(
             location,
             allowUnsafe,
@@ -2839,8 +2679,7 @@ public abstract class ChatBot
     /// Check if the client is currently processing a Movement.
     /// </summary>
     /// <returns>true if a movement is currently handled</returns>
-    protected bool ClientIsMoving()
-    {
+    protected bool ClientIsMoving() {
         return Handler.ClientIsMoving();
     }
 
@@ -2848,8 +2687,7 @@ public abstract class ChatBot
     /// Look at the specified location
     /// </summary>
     /// <param name="location">Location to look at</param>
-    protected void LookAtLocation(Location location)
-    {
+    protected void LookAtLocation(Location location) {
         Handler.UpdateLocation(Handler.GetCurrentLocation(), location);
     }
 
@@ -2858,8 +2696,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="yaw">Yaw to look at</param>
     /// <param name="pitch">Pitch to look at</param>
-    protected void LookAtLocation(float yaw, float pitch)
-    {
+    protected void LookAtLocation(float yaw, float pitch) {
         Handler.UpdateLocation(Handler.GetCurrentLocation(), yaw, pitch);
     }
 
@@ -2872,24 +2709,21 @@ public abstract class ChatBot
     protected Tuple<bool, Location, Block> GetLookingBlock(
         double maxDistance = 4.5,
         bool includeFluids = false
-    )
-    {
+    ) {
         return RaycastHelper.RaycastBlock(Handler, maxDistance, includeFluids);
     }
 
     /// <summary>
     /// Get a Y-M-D h:m:s timestamp representing the current system date and time
     /// </summary>
-    protected static string GetTimestamp()
-    {
+    protected static string GetTimestamp() {
         return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
     }
 
     /// <summary>
     /// Get a h:m:s timestamp representing the current system time
     /// </summary>
-    protected static string GetShortTimestamp()
-    {
+    protected static string GetShortTimestamp() {
         return DateTime.Now.ToString("HH:mm:ss");
     }
 
@@ -2898,10 +2732,8 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="file">File to load</param>
     /// <returns>The string array or an empty array if failed to load the file</returns>
-    protected string[] LoadDistinctEntriesFromFile(string file)
-    {
-        if (File.Exists(file))
-        {
+    protected string[] LoadDistinctEntriesFromFile(string file) {
+        if (File.Exists(file)) {
             //Read all lines from file, remove lines with no text, convert to lowercase,
             //remove duplicate entries, convert to a string array, and return the result.
             return File.ReadAllLines(file, Encoding.UTF8)
@@ -2909,9 +2741,7 @@ public abstract class ChatBot
                 .Select(line => line.ToLower())
                 .Distinct()
                 .ToArray();
-        }
-        else
-        {
+        } else {
             LogToConsole("File not found: " + Path.GetFullPath(file));
             return Array.Empty<string>();
         }
@@ -2921,8 +2751,7 @@ public abstract class ChatBot
     /// Return the Server Port where the client is connected to
     /// </summary>
     /// <returns>Server Port where the client is connected to</returns>
-    protected int GetServerPort()
-    {
+    protected int GetServerPort() {
         return Handler.GetServerPort();
     }
 
@@ -2930,8 +2759,7 @@ public abstract class ChatBot
     /// Return the Server Host where the client is connected to
     /// </summary>
     /// <returns>Server Host where the client is connected to</returns>
-    protected string GetServerHost()
-    {
+    protected string GetServerHost() {
         return Handler.GetServerHost();
     }
 
@@ -2939,8 +2767,7 @@ public abstract class ChatBot
     /// Return the Username of the current account
     /// </summary>
     /// <returns>Username of the current account</returns>
-    protected string GetUsername()
-    {
+    protected string GetUsername() {
         return Handler.GetUsername();
     }
 
@@ -2948,8 +2775,7 @@ public abstract class ChatBot
     /// Return the Gamemode of the current account
     /// </summary>
     /// <returns>Username of the current account</returns>
-    protected int GetGamemode()
-    {
+    protected int GetGamemode() {
         return Handler.GetGamemode();
     }
 
@@ -2957,8 +2783,7 @@ public abstract class ChatBot
     /// Return the head yaw of the client player
     /// </summary>
     /// <returns>Yaw of the client player</returns>
-    protected float GetYaw()
-    {
+    protected float GetYaw() {
         return Handler.GetYaw();
     }
 
@@ -2966,8 +2791,7 @@ public abstract class ChatBot
     /// Return the head pitch of the client player
     /// </summary>
     /// <returns>Pitch of the client player</returns>
-    protected float GetPitch()
-    {
+    protected float GetPitch() {
         return Handler.GetPitch();
     }
 
@@ -2975,8 +2799,7 @@ public abstract class ChatBot
     /// Return the UserUUID of the current account
     /// </summary>
     /// <returns>UserUUID of the current account</returns>
-    protected string GetUserUUID()
-    {
+    protected string GetUserUUID() {
         return Handler.GetUserUuidStr();
     }
 
@@ -2984,8 +2807,7 @@ public abstract class ChatBot
     /// Return the EntityID of the current player
     /// </summary>
     /// <returns>EntityID of the current player</returns>
-    protected int GetPlayerEntityID()
-    {
+    protected int GetPlayerEntityID() {
         return Handler.GetPlayerEntityID();
     }
 
@@ -2993,8 +2815,7 @@ public abstract class ChatBot
     /// Return the list of currently online players
     /// </summary>
     /// <returns>List of online players</returns>
-    protected string[] GetOnlinePlayers()
-    {
+    protected string[] GetOnlinePlayers() {
         return Handler.GetOnlinePlayers();
     }
 
@@ -3005,8 +2826,7 @@ public abstract class ChatBot
     ///     dictionary of online player whereby
     ///     UUID represents the key
     ///     playername represents the value</returns>
-    protected Dictionary<string, string> GetOnlinePlayersWithUUID()
-    {
+    protected Dictionary<string, string> GetOnlinePlayersWithUUID() {
         return Handler.GetOnlinePlayersWithUUID();
     }
 
@@ -3014,8 +2834,7 @@ public abstract class ChatBot
     /// Registers the given plugin channel for use by this chatbot.
     /// </summary>
     /// <param name="channel">The name of the channel to register</param>
-    protected void RegisterPluginChannel(string channel)
-    {
+    protected void RegisterPluginChannel(string channel) {
         registeredPluginChannels.Add(channel);
         Handler.RegisterPluginChannel(channel, this);
     }
@@ -3024,8 +2843,7 @@ public abstract class ChatBot
     /// Unregisters the given plugin channel, meaning this chatbot can no longer use it.
     /// </summary>
     /// <param name="channel">The name of the channel to unregister</param>
-    protected void UnregisterPluginChannel(string channel)
-    {
+    protected void UnregisterPluginChannel(string channel) {
         registeredPluginChannels.RemoveAll(chan => chan == channel);
         Handler.UnregisterPluginChannel(channel, this);
     }
@@ -3042,12 +2860,9 @@ public abstract class ChatBot
         string channel,
         byte[] data,
         bool sendEvenIfNotRegistered = false
-    )
-    {
-        if (!sendEvenIfNotRegistered)
-        {
-            if (!registeredPluginChannels.Contains(channel))
-            {
+    ) {
+        if (!sendEvenIfNotRegistered) {
+            if (!registeredPluginChannels.Contains(channel)) {
                 return false;
             }
         }
@@ -3058,8 +2873,7 @@ public abstract class ChatBot
     /// Get server current TPS (tick per second)
     /// </summary>
     /// <returns>tps</returns>
-    protected double GetServerTPS()
-    {
+    protected double GetServerTPS() {
         return Handler.GetServerTPS();
     }
 
@@ -3071,8 +2885,7 @@ public abstract class ChatBot
     /// <param name="hand">Hand.MainHand or Hand.OffHand</param>
     /// <returns>TRUE in case of success</returns>
     [Obsolete("Prefer using InteractType enum instead of int for interaction type")]
-    protected bool InteractEntity(int EntityID, int type, Hand hand = Hand.MainHand)
-    {
+    protected bool InteractEntity(int EntityID, int type, Hand hand = Hand.MainHand) {
         return Handler.InteractEntity(EntityID, (InteractType)type, hand);
     }
 
@@ -3083,8 +2896,7 @@ public abstract class ChatBot
     /// <param name="type">Interaction type (InteractType.Interact, Attack or AttackAt)</param>
     /// <param name="hand">Hand.MainHand or Hand.OffHand</param>
     /// <returns>TRUE in case of success</returns>
-    protected bool InteractEntity(int EntityID, InteractType type, Hand hand = Hand.MainHand)
-    {
+    protected bool InteractEntity(int EntityID, InteractType type, Hand hand = Hand.MainHand) {
         return Handler.InteractEntity(EntityID, type, hand);
     }
 
@@ -3102,8 +2914,7 @@ public abstract class ChatBot
         ItemType itemType,
         int count,
         Dictionary<string, object>? nbt = null
-    )
-    {
+    ) {
         return Handler.DoCreativeGive(slot, itemType, count, nbt);
     }
 
@@ -3114,8 +2925,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="slot">Inventory slot to clear</param>
     /// <returns>TRUE if item cleared successfully</returns>
-    protected bool CreativeDelete(int slot)
-    {
+    protected bool CreativeDelete(int slot) {
         return CreativeGive(slot, ItemType.Null, 0, null);
     }
 
@@ -3124,8 +2934,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="hand">Hand.MainHand or Hand.OffHand</param>
     /// <returns>TRUE if animation successfully done</returns>
-    public bool SendAnimation(Hand hand = Hand.MainHand)
-    {
+    public bool SendAnimation(Hand hand = Hand.MainHand) {
         return Handler.DoAnimation((int)hand);
     }
 
@@ -3133,8 +2942,7 @@ public abstract class ChatBot
     /// Use item currently in the player's hand (active inventory bar slot)
     /// </summary>
     /// <returns>TRUE if successful</returns>
-    protected bool UseItemInHand()
-    {
+    protected bool UseItemInHand() {
         return Handler.UseItemOnHand();
     }
 
@@ -3142,8 +2950,7 @@ public abstract class ChatBot
     /// Use item currently in the player's hand (active inventory bar slot)
     /// </summary>
     /// <returns>TRUE if successful</returns>
-    protected bool UseItemInLeftHand()
-    {
+    protected bool UseItemInLeftHand() {
         return Handler.UseItemOnLeftHand();
     }
 
@@ -3151,8 +2958,7 @@ public abstract class ChatBot
     /// Check inventory handling enable status
     /// </summary>
     /// <returns>TRUE if inventory handling is enabled</returns>
-    public bool GetInventoryEnabled()
-    {
+    public bool GetInventoryEnabled() {
         return Handler.GetInventoryEnabled();
     }
 
@@ -3163,8 +2969,7 @@ public abstract class ChatBot
     /// <param name="blockFace">Block face (e.g. Direction.Down when clicking on the block below to place this block)</param>
     /// <param name="hand">Hand.MainHand or Hand.OffHand</param>
     /// <returns>TRUE if successfully placed</returns>
-    public bool SendPlaceBlock(Location location, Direction blockFace, Hand hand = Hand.MainHand)
-    {
+    public bool SendPlaceBlock(Location location, Direction blockFace, Hand hand = Hand.MainHand) {
         return Handler.PlaceBlock(location, blockFace, hand);
     }
 
@@ -3172,8 +2977,7 @@ public abstract class ChatBot
     /// Get the player's inventory. Do not write to it, will not have any effect server-side.
     /// </summary>
     /// <returns>Player inventory</returns>
-    protected Container GetPlayerInventory()
-    {
+    protected Container GetPlayerInventory() {
         Container container = Handler.GetPlayerInventory();
         return new Container(container.ID, container.Type, container.Title, container.Items);
     }
@@ -3182,8 +2986,7 @@ public abstract class ChatBot
     /// Get all inventories, player and container(s). Do not write to them. Will not have any effect server-side.
     /// </summary>
     /// <returns>All inventories</returns>
-    public Dictionary<int, Container> GetInventories()
-    {
+    public Dictionary<int, Container> GetInventories() {
         return Handler.GetInventories();
     }
 
@@ -3194,8 +2997,7 @@ public abstract class ChatBot
     /// <param name="slot">Slot ID</param>
     /// <param name="actionType">Action Type</param>
     /// <returns>TRUE in case of success</returns>
-    protected bool WindowAction(int inventoryId, int slot, WindowActionType actionType)
-    {
+    protected bool WindowAction(int inventoryId, int slot, WindowActionType actionType) {
         return Handler.DoWindowAction(inventoryId, slot, actionType);
     }
 
@@ -3204,8 +3006,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="container">Inventory Container</param>
     /// <returns>ItemMovingHelper instance</returns>
-    protected ItemMovingHelper GetItemMovingHelper(Container container)
-    {
+    protected ItemMovingHelper GetItemMovingHelper(Container container) {
         return new ItemMovingHelper(container, Handler);
     }
 
@@ -3214,8 +3015,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="slot">0-8</param>
     /// <returns>True if success</returns>
-    protected bool ChangeSlot(short slot)
-    {
+    protected bool ChangeSlot(short slot) {
         return Handler.ChangeSlot(slot);
     }
 
@@ -3223,8 +3023,7 @@ public abstract class ChatBot
     /// Get current player selected hotbar slot
     /// </summary>
     /// <returns>0-8</returns>
-    protected byte GetCurrentSlot()
-    {
+    protected byte GetCurrentSlot() {
         return Handler.GetCurrentSlot();
     }
 
@@ -3232,8 +3031,7 @@ public abstract class ChatBot
     /// Clean all inventory
     /// </summary>
     /// <returns>TRUE if the uccessfully clear</returns>
-    protected bool ClearInventories()
-    {
+    protected bool ClearInventories() {
         return Handler.ClearInventories();
     }
 
@@ -3251,8 +3049,7 @@ public abstract class ChatBot
         string line2,
         string line3,
         string line4
-    )
-    {
+    ) {
         return Handler.UpdateSign(location, line1, line2, line3, line4);
     }
 
@@ -3260,8 +3057,7 @@ public abstract class ChatBot
     /// Selects villager trade
     /// </summary>
     /// <param name="selectedSlot">Trade slot to select, starts at 0.</param>
-    protected bool SelectTrade(int selectedSlot)
-    {
+    protected bool SelectTrade(int selectedSlot) {
         return Handler.SelectTrade(selectedSlot);
     }
 
@@ -3269,8 +3065,7 @@ public abstract class ChatBot
     /// Teleport to player in spectator mode
     /// </summary>
     /// <param name="entity">player to teleport to</param>
-    protected bool SpectatorTeleport(Entity entity)
-    {
+    protected bool SpectatorTeleport(Entity entity) {
         return Handler.Spectate(entity);
     }
 
@@ -3278,8 +3073,7 @@ public abstract class ChatBot
     /// Teleport to player/entity in spectator mode
     /// </summary>
     /// <param name="uuid">uuid of entity to teleport to</param>
-    protected bool SpectatorTeleport(Guid UUID)
-    {
+    protected bool SpectatorTeleport(Guid UUID) {
         return Handler.SpectateByUUID(UUID);
     }
 
@@ -3295,8 +3089,7 @@ public abstract class ChatBot
         string command,
         CommandBlockMode mode,
         CommandBlockFlags flags
-    )
-    {
+    ) {
         return Handler.UpdateCommandBlock(location, command, mode, flags);
     }
 
@@ -3305,8 +3098,7 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="inventoryID"></param>
     /// <returns>True if success</returns>
-    protected bool CloseInventory(int inventoryID)
-    {
+    protected bool CloseInventory(int inventoryID) {
         return Handler.CloseInventory(inventoryID);
     }
 
@@ -3314,16 +3106,14 @@ public abstract class ChatBot
     /// Get max length for chat messages
     /// </summary>
     /// <returns>Max length, in characters</returns>
-    protected int GetMaxChatMessageLength()
-    {
+    protected int GetMaxChatMessageLength() {
         return Handler.GetMaxChatMessageLength();
     }
 
     /// <summary>
     /// Respawn player
     /// </summary>
-    protected bool Respawn()
-    {
+    protected bool Respawn() {
         if (Handler.GetHealth() <= 0)
             return Handler.SendRespawnPacket();
         else
@@ -3337,8 +3127,7 @@ public abstract class ChatBot
     /// Enable this may increase memory usage.
     /// </remarks>
     /// <param name="enabled"></param>
-    protected void SetNetworkPacketEventEnabled(bool enabled)
-    {
+    protected void SetNetworkPacketEventEnabled(bool enabled) {
         Handler.SetNetworkPacketCaptureEnabled(enabled);
     }
 
@@ -3346,8 +3135,7 @@ public abstract class ChatBot
     /// Get the minecraft protcol number currently in use
     /// </summary>
     /// <returns>Protcol number</returns>
-    protected int GetProtocolVersion()
-    {
+    protected int GetProtocolVersion() {
         return Handler.GetProtocolVersion();
     }
 
@@ -3360,8 +3148,7 @@ public abstract class ChatBot
     /// <example>bool result = InvokeOnMainThread(() => methodThatReturnsAbool(argument));</example>
     /// <example>int result = InvokeOnMainThread(() => { yourCode(); return 42; });</example>
     /// <typeparam name="T">Type of the return value</typeparam>
-    protected T InvokeOnMainThread<T>(Func<T> task)
-    {
+    protected T InvokeOnMainThread<T>(Func<T> task) {
         return Handler.InvokeOnMainThread(task);
     }
 
@@ -3372,8 +3159,7 @@ public abstract class ChatBot
     /// <example>InvokeOnMainThread(methodThatReturnsNothing);</example>
     /// <example>InvokeOnMainThread(() => methodThatReturnsNothing(argument));</example>
     /// <example>InvokeOnMainThread(() => { yourCode(); });</example>
-    protected void InvokeOnMainThread(Action task)
-    {
+    protected void InvokeOnMainThread(Action task) {
         Handler.InvokeOnMainThread(task);
     }
 
@@ -3387,10 +3173,8 @@ public abstract class ChatBot
     /// <example>InvokeOnMainThread(() => methodThatReturnsNothing(argument), 10);</example>
     /// <example>InvokeOnMainThread(() => { yourCode(); }, 10);</example>
     /// </example>
-    protected void ScheduleOnMainThread(Action task, int delayTicks = 0)
-    {
-        lock (delayTasksLock)
-        {
+    protected void ScheduleOnMainThread(Action task, int delayTicks = 0) {
+        lock (delayTasksLock) {
             delayedTasks.Add(new TaskWithDelay(task, delayTicks));
         }
     }
@@ -3400,10 +3184,8 @@ public abstract class ChatBot
     /// </summary>
     /// <param name="task">Task to run</param>
     /// <param name="delay">Run the task after the specified delay</param>
-    protected void ScheduleOnMainThread(Action task, TimeSpan delay)
-    {
-        lock (delayTasksLock)
-        {
+    protected void ScheduleOnMainThread(Action task, TimeSpan delay) {
+        lock (delayTasksLock) {
             delayedTasks.Add(new TaskWithDelay(task, delay));
         }
     }
@@ -3420,24 +3202,20 @@ public abstract class ChatBot
     /// <summary>
     /// Command class with constructor for creating command for ChatBots.
     /// </summary>
-    public class ChatBotCommand : Command
-    {
+    public class ChatBotCommand : Command {
         public CommandRunner Runner;
 
         private readonly string _cmdName;
         private readonly string _cmdDesc;
         private readonly string _cmdUsage;
 
-        public override string CmdName
-        {
+        public override string CmdName {
             get { return _cmdName; }
         }
-        public override string CmdUsage
-        {
+        public override string CmdUsage {
             get { return _cmdUsage; }
         }
-        public override string CmdDesc
-        {
+        public override string CmdDesc {
             get { return _cmdDesc; }
         }
 
@@ -3455,8 +3233,7 @@ public abstract class ChatBot
             string cmdDesc,
             string cmdUsage,
             CommandRunner callback
-        )
-        {
+        ) {
             _cmdName = cmdName;
             _cmdDesc = cmdDesc;
             _cmdUsage = cmdUsage;
@@ -3464,8 +3241,7 @@ public abstract class ChatBot
         }
     }
 }
-public enum WindowActionType
-{
+public enum WindowActionType {
     /// <summary>
     /// Left click with mouse on a slot: grab or drop a whole item stack
     /// </summary>
@@ -3552,16 +3328,13 @@ public enum WindowActionType
 //using Newtonsoft.Json.Linq;
 
 
-// MCC.LoadBot(new ExampleChatBot());
+// MCC.LoadBot(new MineplexBot());
 
 //MCCScript Extensions
-class ExampleChatBot : ChatBot
-{
-    public override void Initialize()
-    {
+class MineplexBot : ChatBot {
+    public override void Initialize() {
         LogToConsole("§aWorking");
-        if (!GetInventoryEnabled())
-        {
+        if (!GetInventoryEnabled()) {
             LogToConsole("§4InventoryHandle disabled ! Can't interract w containers !");
         }
     }
@@ -3570,8 +3343,7 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Prints something in minecraft chat as a bot
     /// </summary>
-    public void PrintChat(string text)
-    {
+    public void PrintChat(string text) {
         SendText("[B] " + text);
     }
 
@@ -3579,8 +3351,7 @@ class ExampleChatBot : ChatBot
     /// Clones a dictionary of int, items. 
     /// Not really efficient nor elegent but avoids conccurency issues
     /// </summary>
-    public Dictionary<int, Item> newDictionary(Dictionary<int, Item> dict)
-    {
+    public Dictionary<int, Item> newDictionary(Dictionary<int, Item> dict) {
         return dict.ToDictionary(
             entry => entry.Key,
             entry => entry.Value
@@ -3589,13 +3360,26 @@ class ExampleChatBot : ChatBot
 
 
     /// <summary>
+    /// return if an item display name & a string (both lowered & verbatimed) match
+    /// </summary>
+    public bool MatchesNoCap(Item item, string string2) {
+        return MatchesNoCap(item.DisplayName, string2);
+    }
+
+    /// <summary>
+    /// return if 2 strings lowered & verbatimed match
+    /// </summary>
+    public bool MatchesNoCap(string string1, string string2) {
+        return GetVerbatim(string1).ToLower() == GetVerbatim(string2).ToLower();
+    }
+
+
+    /// <summary>
     /// Updates the inventoryId of the class when an inventory is needed
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
-    public override void OnInventoryOpen(int inventoryId)
-    {
-        if (this.inventoryNeeded)
-        {
+    public override void OnInventoryOpen(int inventoryId) {
+        if (this.inventoryNeeded) {
             this.inventoryId = inventoryId;
         }
     }
@@ -3607,11 +3391,9 @@ class ExampleChatBot : ChatBot
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Inventory Id of a new inventory</returns>
-    public async Task<int> waitForInventoryId(int delay = 50)
-    {
+    public async Task<int> waitForInventoryId(int delay = 50) {
         this.inventoryNeeded = true;
-        while (this.inventoryId == 0)
-        {
+        while (this.inventoryId == 0) {
             await Task.Delay(50);
         }
         int newId = this.inventoryId;
@@ -3625,14 +3407,16 @@ class ExampleChatBot : ChatBot
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Container of the new inventory</returns>
-    public async Task<Container> waitForInventory(string name, int delay = 50)
-    {
-        while (true)
-        {
+    public async Task<Container> waitForInventory(string name, int delay = 50, int maxTries = 3) {
+        int tries = 1;
+        while (true) {
+            if (tries > maxTries) 
+                return null;
             int newId = await waitForInventoryId(delay);
             Container newInv = GetInventories()[newId];
-            if (GetVerbatim(newInv.Title.ToLower()) == name.ToLower())
+            if (MatchesNoCap(newInv.Title, name))
                 return newInv;
+            tries++;
         }
         return null;
     }
@@ -3644,14 +3428,11 @@ class ExampleChatBot : ChatBot
     /// <remarks>Can specify the type of click and if the inventory needs to be closed after (by default LeftClick and yes)</remarks>
     private void clickInventory(
         Container container, string itemName,
-        WindowActionType actionType = WindowActionType.LeftClick, bool close = true)
-    {
-        foreach (KeyValuePair<int, Item> entry in newDictionary(container.Items))
-        {
-            if (GetVerbatim(entry.Value.DisplayName.ToLower()) == itemName.ToLower())
-            {
-                clickInventory(container, entry.Key, actionType, close);
-            }
+        WindowActionType actionType = WindowActionType.LeftClick, bool close = true) {
+
+        foreach ((int index, Item item) in newDictionary(container.Items)) {
+            if (MatchesNoCap(item.DisplayName, itemName))
+                clickInventory(container, index, actionType, close);
         }
     }
 
@@ -3662,8 +3443,7 @@ class ExampleChatBot : ChatBot
     private void clickInventory(
         Container container, int itemIndex,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true
-    )
-    {
+    ) {
 
         WindowAction(container.ID, itemIndex, actionType);
         if (close)
@@ -3682,8 +3462,7 @@ class ExampleChatBot : ChatBot
     private async Task<Container> clickInventoryContainer(
         Container container, string itemName, string containerName,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true
-    )
-    {
+    ) {
         clickInventory(container, itemName, actionType, close);
         return await waitForInventory(containerName);
     }
@@ -3699,8 +3478,7 @@ class ExampleChatBot : ChatBot
     private async Task<Container> clickInventoryContainer(
         Container container, int itemIndex, string containerName,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true
-    )
-    {
+    ) {
         clickInventory(container, itemIndex, actionType, close);
         return await waitForInventory(containerName);
     }
@@ -3708,46 +3486,59 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Prints nicely all items inside a container
     /// </summary>
-    private void listItemNames(Container container)
-    {
+    private void listItemNames(Container container) {
         LogToConsole("Here's a list of all items in your container:");
-        foreach (KeyValuePair<int, Item> entry in container.Items)
-        {
-            Item item = entry.Value;
+        foreach ((int index, Item item) in container.Items) {
             LogToConsole(
-                entry.Key + ": " + GetVerbatim(item.DisplayName) + " (" + item.Type.ToString() + ")"
+                index + ": " + GetVerbatim(item.DisplayName) + " (" + item.Type.ToString() + ")"
             );
         }
     }
 
     /// <summary>
+    /// Returns the name of an item inside a provided container but
+    /// with its capitalization from the container
+    /// Not really needed but looks a bit nicer
+    /// </summary>
+    private string getCapitalizedItemName(Container container, string name) {
+        foreach ((int _, Item item) in container.Items) {
+            string itemName = GetVerbatim(item.DisplayName);
+
+            if (itemName.ToLower() == name.ToLower())
+                return itemName;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Prints nicely all containers open
     /// </summary>
-    private void listContainers()
-    {
+    private void listContainers() {
         LogToConsole("Here's a list of all containers currently open:");
-        foreach (KeyValuePair<int, Container> entry in GetInventories())
-        {
-            Container container = entry.Value;
-            LogToConsole(entry.Key + ": " + GetVerbatim(container.Title));
+        foreach ((int index, Container container) in GetInventories()) {
+            LogToConsole(index + ": " + GetVerbatim(container.Title));
         }
     }
 
     /// <summary>
     /// Opens the /game menu by right clicking the melon
+    /// Can choose to either use the item or command (item by default)
+    /// The command is always available, the item is (looks to be) faster
     /// </summary>
-    private async Task<Container> openMelon()
-    {
-        ChangeSlot(7);
-        UseItemInHand();
+    private async Task<Container> openMelon(bool useItem = true) {
+        if (useItem) {
+            ChangeSlot(7);
+            UseItemInHand();
+        } else {
+            SendText("/game");
+        }
         return await waitForInventory("Game Panel");
     }
 
     /// <summary>
     /// Gives Co Owner perms to all players specified
     /// </summary>
-    private async void giveCoOwn(List<string> players)
-    {
+    private async void giveCoOwn(List<string> players) {
         Container melon = await openMelon();
         Container coOwnContainer = await clickInventoryContainer(
             melon,
@@ -3762,11 +3553,9 @@ class ExampleChatBot : ChatBot
     /// Toggles all specified players from the servers whitelist
     /// </summary>
     /// <remarks>If none specified, toggles nixuge, a4y, fc0, wf0 and dxrrymxxnkid</remarks>
-    private void addToWhitelist(List<string> players)
-    {
+    private void addToWhitelist(List<string> players) {
         //note: nasty bug w that one since "dxrrymxxnkid" is in another color 
-        if (players.Count == 0)
-        {
+        if (players.Count == 0) {
             players = new List<string> { "nixuge", "a4y", "fc0", "wf0", "dxrrymxxnkid" };
         }
         SendText("/whitelist " + String.Join(" ", players.ToArray()));
@@ -3776,11 +3565,9 @@ class ExampleChatBot : ChatBot
     /// Closes all open inventories
     /// </summary>
     /// <remarks>Not really useful</remarks>
-    private void closeAll()
-    {
+    private void closeAll() {
         //TODO: test & fix
-        foreach (int invId in GetInventories().Keys)
-        {
+        foreach (int invId in GetInventories().Keys) {
             CloseInventory(invId);
         }
         PrintChat("Closed all inventories");
@@ -3789,8 +3576,7 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Reloads the bot
     /// </summary>
-    private void reloadBot()
-    {
+    private void reloadBot() {
         PrintChat("Reloading bot");
         PerformInternalCommand("script ./owo.cs");
         UnloadBot();
@@ -3800,16 +3586,13 @@ class ExampleChatBot : ChatBot
     /// Sets the map inventory index for the current game
     /// </summary>
     /// <remarks>1st arg = index; 2nd arg (optional) = page</remarks>
-    private void setIndex(List<string> args)
-    {
-        if (this.currentGame == "")
-        {
+    private void setIndex(List<string> args) {
+        if (this.currentGame == "") {
             PrintChat("Please set a game before");
             return;
         }
 
-        if (args.Count == 0)
-        {
+        if (args.Count == 0) {
             PrintChat("No value provided, setting to first element (10)");
             this.currentSlot = FIRST_SLOT;
             return;
@@ -3818,8 +3601,7 @@ class ExampleChatBot : ChatBot
         this.currentSlot = int.Parse(args[0]);
         PrintChat("Set slot to " + args[0]);
 
-        if (args.Count > 1)
-        {
+        if (args.Count > 1) {
             this.currentPage = int.Parse(args[1]);
             PrintChat("Set page to " + args[1]);
         }
@@ -3829,8 +3611,7 @@ class ExampleChatBot : ChatBot
     /// Clicks on the "Next Map" arrow (index 53) on the provided Container
     /// </summary>
     /// <remarks>See the commentary inside the function to see why this is required</remarks>
-    private async Task clickNextButton(Container maps)
-    {
+    private async Task clickNextButton(Container maps) {
         // IMPORTANT NOTE:
         // Due to a nasty bug (-1h30) having an inventory open with the same
         // name as the previous one doesn't call OnInventoryOpen(...)
@@ -3844,11 +3625,10 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Selects a map from the current game using the current index & page. 
     /// incrementSlot makes it so that if yes it goes to the next map before selecting it
+    /// If no args, it'll also start the map
     /// </summary>
-    private async void clickOnMap(bool incrementSlot)
-    {
-        if (this.currentGame == "")
-        {
+    private async void clickOnMap(bool incrementSlot, List<string> args) {
+        if (this.currentGame == "") {
             PrintChat("Please set a game before");
             return;
         }
@@ -3857,42 +3637,33 @@ class ExampleChatBot : ChatBot
 
         Container maps = await clickInventoryContainer(games, index, "Set Map", WindowActionType.RightClick);
 
-        if (this.currentPage > 0)
-        {
-            for (int i = 0; i < this.currentPage; i++)
-            {
+        if (this.currentPage > 0) {
+            for (int i = 0; i < this.currentPage; i++) {
                 await clickNextButton(maps);
             }
         }
 
         // start only
-        if (this.currentSlot == 9 && !incrementSlot)
-        {
+        if (this.currentSlot == 9 && !incrementSlot) {
             this.currentSlot++;
         }
 
-        if (incrementSlot)
-        {
+        if (incrementSlot) {
             this.currentSlot++;
 
-            if (this.EDGE_SLOTS.Contains(currentSlot))
-            {
+            if (this.EDGE_SLOTS.Contains(currentSlot)) {
                 this.currentSlot += 2;
             }
 
             // if cursor not on any item (or not paper)
-            if (!maps.Items.ContainsKey(currentSlot) || maps.Items[currentSlot].Type != ItemType.Paper)
-            {
+            if (!maps.Items.ContainsKey(currentSlot) || maps.Items[currentSlot].Type != ItemType.Paper) {
                 // if at end & has a "next page", goto next
-                if (currentSlot > 43 && maps.Items.ContainsKey(53))
-                {
+                if (currentSlot > 43 && maps.Items.ContainsKey(53)) {
                     currentPage += 1;
                     currentSlot = FIRST_SLOT;
                     await clickNextButton(maps);
                     // else stop
-                }
-                else
-                {
+                } else {
                     PrintChat("No more maps !");
                     return;
                 }
@@ -3906,6 +3677,11 @@ class ExampleChatBot : ChatBot
         clickInventory(maps, currentSlot);
 
         PrintChat("Successfully set map to \"" + mapName + "\" (slot " + currentSlot + ")");
+
+        if (args.Count == 0) {
+            startGame(null);
+            PrintChat("Successfully started game");
+        }
     }
 
     /// <summary>
@@ -3913,26 +3689,19 @@ class ExampleChatBot : ChatBot
     /// </summary>
     /// <remarks>container can be null and will automaticallt get the "set game" page | UNTESTED AS I DONT HAVE ACCESS</remarks>
     /// <returns>A tuple with the tuple containing the game item and the item's index</returns>
-    private async Task<(Container, int)> searchGamePage(Container container, string gameName)
-    {
-        if (container == null)
-        {
+    private async Task<(Container, int)> searchGamePage(Container container, string gameName) {
+        if (container == null) {
             container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
         }
-        int newPageIndex = 0;
-        foreach (KeyValuePair<int, Item> entry in container.Items)
-        {
-            if (GetVerbatim(entry.Value.DisplayName.ToLower()) == gameName)
-            {
-                return (container, entry.Key);
-            }
-            else if (GetVerbatim(entry.Value.DisplayName.ToLower()) == "next page")
-            {
-                newPageIndex = entry.Key;
-            }
+        bool nextPage = false;
+        foreach ((int index, Item item) in container.Items) {
+            if (MatchesNoCap(item.DisplayName, gameName)) 
+                return (container, index);
+            else if (MatchesNoCap(item.DisplayName, "next page"))
+                nextPage = true;
+            
         }
-        if (newPageIndex != 0) // = if "next page" item found
-        {
+        if (nextPage) {
             await clickNextButton(container);
             return await searchGamePage(container, gameName);
         }
@@ -3942,31 +3711,26 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Chooses a game and sets the this.currentGame value
     /// </summary>
-    private async void chooseGame(List<string> args)
-    {
-        if (args.Count == 0)
-        {
+    private async void chooseGame(List<string> args) {
+        if (args.Count == 0) {
             PrintChat("No game specified !");
             return;
         }
 
         string gameName = String.Join(" ", args.ToArray()).ToLower();
 
-        if (this.currentGame.ToLower() == gameName)
-        {
+        if (this.currentGame.ToLower() == gameName) {
             PrintChat("Game already specified !");
             return;
         }
 
         (Container container, int index) = await searchGamePage(null, gameName);
 
-        if (container == null || index == 0)
-        {
+        if (container == null || index == 0) {
             PrintChat("Specified game invalid (" + gameName + ")");
-        }
-        else
-        {
-            this.currentGame = gameName;
+        } else {
+            LogToConsole(getCapitalizedItemName(container, gameName));
+            this.currentGame = getCapitalizedItemName(container, gameName);
             this.currentPage = 0;
             clickInventory(container, index);
             CloseInventory(container.ID);
@@ -3976,13 +3740,32 @@ class ExampleChatBot : ChatBot
     }
 
     /// <summary>
+    /// Starts a game
+    /// If nothing in args, will run instantly (shiftclick)
+    /// Otherwise, will click normally (and so wait 10s)
+    /// </summary>
+    private async void startGame(List<string> args) {
+        WindowActionType click = (args == null || args.Count == 0) ? WindowActionType.ShiftClick : WindowActionType.LeftClick;
+        Container melon = await openMelon();
+        // clickInventory(melon, 10, actionType:click);
+        clickInventory(melon, "Start Game", actionType: click);
+    }
+
+    /// <summary>
+    /// Stops the game
+    /// </summary>
+    private async void stopGame() {
+        Container melon = await openMelon(useItem: false);
+        // clickInventory(melon, 19, actionType:click);
+        clickInventory(melon, "Stop Game");
+    }
+
+    /// <summary>
     /// Lets you choose a map
     /// </summary>
     /// <remarks>UNIMPLEMENTED</remarks>
-    private async void chooseMap(List<string> args)
-    {
-        if (args.Count == 0)
-        {
+    private async void chooseMap(List<string> args) {
+        if (args.Count == 0) {
             PrintChat("No map specified !");
             return;
         }
@@ -4008,17 +3791,14 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Runs the functions based on the commands ran 
     /// </summary>
-    private void runCmd(string cmd, List<string> args)
-    {
+    private void runCmd(string cmd, List<string> args) {
         LogToConsole("§6Received command: " + cmd);
-        if (cmd.ToLower() == "reco")
-        {
+        if (cmd.ToLower() == "reco") {
             ReconnectToTheServer();
             return;
         }
 
-        switch (cmd.ToLower())
-        {
+        switch (cmd.ToLower()) {
             case "game":
                 chooseGame(args);
                 break;
@@ -4037,16 +3817,15 @@ class ExampleChatBot : ChatBot
                 UnloadBot();
                 break;
 
-            case "start":
             case "red":
             case "redo":
-                clickOnMap(false);
+                clickOnMap(false, args);
                 break;
 
             case "cnt":
             case "continue":
             case "next":
-                clickOnMap(true);
+                clickOnMap(true, args);
                 break;
 
             case "setindex":
@@ -4063,6 +3842,15 @@ class ExampleChatBot : ChatBot
             case "closeall":
                 closeAll();
                 break;
+
+            case "start":
+                startGame(args);
+                break;
+
+            case "stop":
+                stopGame();
+                break;
+
             case "rl":
             case "reload":
                 reloadBot();
@@ -4076,12 +3864,11 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Gets every text message and grabs their author and args
     /// </summary>
-    public override void GetText(string text, string? json)
-    {
+    public override void GetText(string text, string? json) {
         if (json.Length < 25
             || json.ToLower().Contains("shop")
             || GetVerbatim(json.Substring(0, 25)).Contains("> ")
-        ) 
+        )
             return;
 
 
@@ -4093,7 +3880,7 @@ class ExampleChatBot : ChatBot
         var items = (JArray)rss["extra"];
         int count = items.Count;
 
-        if (count < 3) 
+        if (count < 3)
             return;
 
         string username = items[count - 2]["text"].ToString();

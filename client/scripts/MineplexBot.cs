@@ -211,7 +211,19 @@ class MineplexBot : ChatBot {
             if (itemName.ToLower() == name.ToLower())
                 return itemName;
         }
-        return null;
+        return "NONE";
+    }
+    
+    /// <summary>
+    /// Returns the name of an item with a specified index 
+    /// inside a provided container
+    /// Not really needed but looks a bit nicer
+    /// </summary>
+    private string getCapitalizedItemName(Container container, int index) {
+        if (!container.Items.ContainsKey(index)) {
+            return "NONE";
+        }
+        return GetVerbatim(container.Items[index].DisplayName);
     }
 
     /// <summary>
@@ -268,9 +280,7 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Closes all open inventories
     /// </summary>
-    /// <remarks>Not really useful</remarks>
     private void closeAll() {
-        //TODO: test & fix
         foreach (int invId in GetInventories().Keys) {
             CloseInventory(invId);
         }
@@ -399,49 +409,34 @@ class MineplexBot : ChatBot {
     }
 
     /// <summary>
-    /// Searches for a specified game inside a specified Container
+    /// Searches for a specified item inside a specified Container
     /// Works with multi-page menus
     /// </summary>
-    /// <remarks>container can be null and will automaticallt get the "set game" page</remarks>
-    /// <returns>A tuple with the open Container containing the game item and the item's index</returns>
-    private async Task<(Container, int)> searchGamePage(Container container, string gameName) {
-        if (container == null) {
-            container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
-        }
-
+    /// <returns>A tuple with the open Container containing the item and the item's index</returns>
+    private async Task<(Container, int)> searchItemContainerMultiPage(Container container, string itemName) {
         foreach ((int index, Item item) in container.Items) {
-            if (MatchesNoCap(item.DisplayName, gameName))
+            if (MatchesNoCap(item.DisplayName, itemName))
                 return (container, index);
         }
 
         if (hasNextButton(container)) {
             await clickNextButton(container);
-            return await searchGamePage(container, gameName);
+            return await searchGamePage(container, itemName);
         }
 
         return (null, 0);
-    }
+    } 
 
     /// <summary>
-    /// Searches for a specified map inside a specified Container
-    /// Works with multi-page menus
+    /// searchItemContainerMultiPage(...) wrapper for game searching specifically
     /// </summary>
-    /// <returns>A tuple with the open Container containing the map item and the item's index</returns>
-    // private async Task<(Container, int)> searchMap(Container container, string gameName) {
-    //     bool nextPage = false;
-    //     foreach ((int index, Item item) in container.Items) {
-    //         if (MatchesNoCap(item.DisplayName, gameName))
-    //             return (container, index);
-    //         else if (MatchesNoCap(item.DisplayName, "next page"))
-    //             nextPage = true;
-
-    //     }
-    //     if (nextPage) {
-    //         await clickNextButton(container);
-    //         return await searchGamePage(container, gameName);
-    //     }
-    //     return (null, 0);
-    // }
+    /// <remarks>Could remove as this wrapper doesn't do much more than the base function</remarks>
+    private async Task<(Container, int)> searchGamePage(Container container, string gameName) {
+        if (container == null) {
+            container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
+        }
+        return await searchItemContainerMultiPage(container, gameName);
+    }
 
     /// <summary>
     /// Chooses a game and sets the this.currentGame value
@@ -522,11 +517,21 @@ class MineplexBot : ChatBot {
             PrintChat("No map specified !");
             return;
         }
-        string map = args[1];
-        // (Container games, int itemIndex) = searchGamePage(null, this.currentGame);
-        // Container maps = await clickInventoryContainer(games, itemIndex, "Set Map", WindowActionType.RightClick);
+        string mapName = String.Join(" ", args.ToArray()).ToLower();
 
-        PrintChat("Unimplemented !");
+        (Container games, int gameItemIndex) = await searchGamePage(null, this.currentGame);
+        Container mapsFirstPage = await clickInventoryContainer(games, gameItemIndex, "Set Map", WindowActionType.RightClick);
+
+        (Container mapsRightPage, int mapItemindex) =  await searchItemContainerMultiPage(mapsFirstPage, mapName);
+        
+        mapName = getCapitalizedItemName(mapsRightPage, mapItemindex);
+
+        if (mapsRightPage == null || mapItemindex == 0)
+            PrintChat("Specified map invalid (" + mapName + ") for game " + this.currentGame);
+        else {
+            clickInventory(mapsRightPage, mapItemindex);
+            PrintChat("Selected map " + mapName + " for game " + this.currentGame);
+        }
     }
 
     // ========== VARS HERE ==========
@@ -713,6 +718,8 @@ class MineplexBot : ChatBot {
             LogToConsole("§4====================");
             LogToConsole(e.StackTrace);
             LogToConsole("§4====================");
+
+            closeAll();
         }
     }
 

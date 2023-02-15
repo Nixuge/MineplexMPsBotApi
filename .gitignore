@@ -1,3 +1,6 @@
 SessionCache.ini
+ProfileKeyCache.ini
 MinecraftClient
 MinecraftClient.backup.ini
+info.txt
+*.csv

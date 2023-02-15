@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Threading;
 
 public enum ItemType {
     Unknown = -2, // Unsupported item type (Forge mod custom item...)
@@ -3320,9 +3321,9 @@ public enum WindowActionType {
 }
 
 
-// ==== PARTS ABOVE ARE TO BE STRIPPED ====
-// ==== RUN INSTALL.SH TO STRIP & MOVE ====
-// ====    TO THE PROPER DIRECTORY     ====
+// ===== PARTS ABOVE ARE TO BE STRIPPED =====
+// ===== RUN INSTALL.SH TO STRIP & MOVE =====
+// =====    TO THE PROPER DIRECTORY     =====
 
 
 //MCCScript 1.0
@@ -3333,7 +3334,6 @@ public enum WindowActionType {
 
 //dll ./scripts/libs/Newtonsoft.Json.dll
 //using Newtonsoft.Json.Linq;
-
 
 // MCC.LoadBot(new MineplexBot());
 
@@ -3354,10 +3354,6 @@ class MineplexBot : ChatBot {
         JoinServer();
         await Task.Delay(500); // just in case server lags (which happens often)
         JoinServer();
-    }
-
-    public override void OnInternalCommand(string commandName, string commandParams, CmdResult Result) {
-        LogToConsole("Cmd: " + commandName + " args: " + commandParams + "result: ");
     }
 
     private void reloadBot() {
@@ -3633,9 +3629,28 @@ class MineplexBot : ChatBot {
             PrintChat("Set page to " + args[1]);
         }
     }
+    
+    
+    /// <summary>
+    /// Checks if an item is at a specified index with a specified index in a Container
+    /// </summary>
+    private bool hasItemAtIndex(Container container, int index, string name) {
+        return container.Items.ContainsKey(index) &&
+                MatchesNoCap(
+                    container.Items[index].DisplayName,
+                    name
+                );
+    }
 
     /// <summary>
-    /// Clicks on the "Next Map" arrow (index 53) on the provided Container
+    /// hasItemAtIndex(...) but for the next button specifically
+    /// </summary>
+    private bool hasNextButton(Container maps) {
+        return hasItemAtIndex(maps, this.NEXT_PAGE_INDEX, "next page");
+    }
+
+    /// <summary>
+    /// Clicks on the "Next Map" arrow on the provided Container
     /// </summary>
     /// <remarks>See the commentary inside the function to see why this is required</remarks>
     private async Task clickNextButton(Container maps) {
@@ -3686,13 +3701,13 @@ class MineplexBot : ChatBot {
             // if cursor not on any item (or not paper)
             if (!maps.Items.ContainsKey(currentSlot) || maps.Items[currentSlot].Type != ItemType.Paper) {
                 // if at end & has a "next page", goto next
-                if (currentSlot > 43 && maps.Items.ContainsKey(53)) {
+                if (currentSlot > 43 && hasNextButton(maps)) {
                     currentPage += 1;
                     currentSlot = FIRST_SLOT;
                     await clickNextButton(maps);
                     // else stop
                 } else {
-                    PrintChat("No more maps ! ("+ this.savedGameMaps + " saved)");
+                    PrintChat("No more maps ! (" + this.savedGameMaps + " saved)");
                     return;
                 }
             }
@@ -3713,27 +3728,48 @@ class MineplexBot : ChatBot {
 
     /// <summary>
     /// Searches for a specified game inside a specified Container
+    /// Works with multi-page menus
     /// </summary>
-    /// <remarks>container can be null and will automaticallt get the "set game" page | UNTESTED AS I DONT HAVE ACCESS</remarks>
-    /// <returns>A tuple with the tuple containing the game item and the item's index</returns>
+    /// <remarks>container can be null and will automaticallt get the "set game" page</remarks>
+    /// <returns>A tuple with the open Container containing the game item and the item's index</returns>
     private async Task<(Container, int)> searchGamePage(Container container, string gameName) {
         if (container == null) {
             container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
         }
-        bool nextPage = false;
+
         foreach ((int index, Item item) in container.Items) {
             if (MatchesNoCap(item.DisplayName, gameName))
                 return (container, index);
-            else if (MatchesNoCap(item.DisplayName, "next page"))
-                nextPage = true;
-
         }
-        if (nextPage) {
+
+        if (hasNextButton(container)) {
             await clickNextButton(container);
             return await searchGamePage(container, gameName);
         }
+
         return (null, 0);
     }
+
+    /// <summary>
+    /// Searches for a specified map inside a specified Container
+    /// Works with multi-page menus
+    /// </summary>
+    /// <returns>A tuple with the open Container containing the map item and the item's index</returns>
+    // private async Task<(Container, int)> searchMap(Container container, string gameName) {
+    //     bool nextPage = false;
+    //     foreach ((int index, Item item) in container.Items) {
+    //         if (MatchesNoCap(item.DisplayName, gameName))
+    //             return (container, index);
+    //         else if (MatchesNoCap(item.DisplayName, "next page"))
+    //             nextPage = true;
+
+    //     }
+    //     if (nextPage) {
+    //         await clickNextButton(container);
+    //         return await searchGamePage(container, gameName);
+    //     }
+    //     return (null, 0);
+    // }
 
     /// <summary>
     /// Chooses a game and sets the this.currentGame value
@@ -3808,12 +3844,16 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Lets you choose a map
     /// </summary>
-    /// <remarks>UNIMPLEMENTED</remarks>
+    /// <remarks>CURRENTLY BEING IMPLEMENTED</remarks>
     private async Task chooseMap(List<string> args) {
         if (args.Count == 0) {
             PrintChat("No map specified !");
             return;
         }
+        string map = args[1];
+        // (Container games, int itemIndex) = searchGamePage(null, this.currentGame);
+        // Container maps = await clickInventoryContainer(games, itemIndex, "Set Map", WindowActionType.RightClick);
+
         PrintChat("Unimplemented !");
     }
 
@@ -3843,7 +3883,7 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Runs the functions based on the commands ran 
     /// </summary>
-    private async Task runCmd(string cmd, List<string> args) {
+    private async Task runCommand(string cmd, List<string> args) {
         LogToConsole("§6Received command: " + cmd);
         if (cmd.ToLower() == "reco") {
             ReconnectToTheServer();
@@ -3851,6 +3891,10 @@ class MineplexBot : ChatBot {
         }
 
         switch (cmd.ToLower()) {
+            case "join":
+                JoinServer();
+                break;
+
             case "game":
                 await chooseGame(args);
                 break;
@@ -3860,6 +3904,7 @@ class MineplexBot : ChatBot {
                 break;
 
             case "whitelist":
+            case "wl":
                 addToWhitelist(args);
                 break;
 
@@ -3887,6 +3932,9 @@ class MineplexBot : ChatBot {
                 break;
 
             case "coown":
+            case "coowner":
+            case "co-owner":
+            case "co-own":
                 await giveCoOwn(args);
                 break;
 
@@ -3923,6 +3971,13 @@ class MineplexBot : ChatBot {
     /// Then sends it to grabCommand() and grabMapAuthor()
     /// </summary>
     public override async void GetText(string text, string? json) {
+        //TODO: test below
+        // if (json.Contains("You must leave spawn before you can chat!")) {
+        //     JoinServer();
+        //     Thread.Sleep(200);
+        //     return;
+        // }
+
         if (json.Length < 65
             || json.ToLower().Contains("shop")
             || GetVerbatim(json.Substring(0, 65)).Contains("> ")
@@ -3949,7 +4004,7 @@ class MineplexBot : ChatBot {
 
         if (count < 3)
             return;
-        
+
         // "1st place..." texts
         if (items[0].ToString() == " ")
             return;
@@ -3974,15 +4029,15 @@ class MineplexBot : ChatBot {
         args.RemoveAt(0);
 
         try {
-            await runCmd(command, args);
+            await runCommand(command, args);
         } catch (Exception e) {
             // Chat
             PrintChat("Something went wrong! See console for full stack trace");
-            string errstr = "Error '" + e.Message +"' @ '" + e.TargetSite + "'";
+            string errstr = "Error '" + e.Message + "' @ '" + e.TargetSite + "'";
             PrintChat(errstr.Substring(0, (errstr.Length <= 256) ? errstr.Length : 256));
             // Console
             LogToConsole("§4====================");
-            LogToConsole("§cError '" + e.Message +"' near " + e.TargetSite);
+            LogToConsole("§cError '" + e.Message + "' near " + e.TargetSite);
             LogToConsole("§4====================");
             LogToConsole(e.StackTrace);
             LogToConsole("§4====================");
@@ -4016,7 +4071,7 @@ class CSVManagement {
     }
 
     private void updateDataTxt(string line) {
-        File.WriteAllTextAsync(this.standalonePath, line  + Environment.NewLine);
+        File.WriteAllTextAsync(this.standalonePath, line + Environment.NewLine);
     }
 
     private string genLine() {

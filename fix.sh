@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sed -ne '/MCCScript/,$ p' test.cs > owo.cs
-sed -i 's/\/\/ MCC.LoadBot/MCC.LoadBot/g' owo.cs
+sed -ne '/MCCScript/,$ p' script.cs > MineplexBot.cs
+sed -i 's/\/\/ MCC.LoadBot/MCC.LoadBot/g' MineplexBot.cs
 
-cp owo.cs ../a4y/
+# cp MineplexBot.cs ../a4y/

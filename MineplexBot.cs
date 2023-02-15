@@ -2,6 +2,8 @@
 
 //using System.Threading.Tasks;
 
+//using MinecraftClient.CommandHandler;
+
 //dll Newtonsoft.Json.dll
 //using Newtonsoft.Json.Linq;
 
@@ -9,9 +11,10 @@
 MCC.LoadBot(new MineplexBot());
 
 //MCCScript Extensions
+
 class MineplexBot : ChatBot {
     public override void Initialize() {
-        // Note: this may try to say "Done loading!" while in spawn,
+        // Note: may try to say "Done loading!" while in spawn,
         // altho since you can't talk in it without moving it doesn't matter
         JoinServer();
         PrintChat("Done loading !");
@@ -20,8 +23,20 @@ class MineplexBot : ChatBot {
         }
     }
 
-    public virtual void AfterGameJoined() {
+    public async override void AfterGameJoined() {
         JoinServer();
+        await Task.Delay(500); // just in case server lags (which happens often)
+        JoinServer();
+    }
+
+    public override void OnInternalCommand(string commandName, string commandParams, CmdResult Result) {
+        LogToConsole("Cmd: " + commandName + " args: " + commandParams + "result: ");
+    }
+
+    private void reloadBot() {
+        PrintChat("Reloading bot");
+        PerformInternalCommand("script ./MineplexBot.cs");
+        UnloadBot();
     }
 
 
@@ -82,10 +97,14 @@ class MineplexBot : ChatBot {
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Inventory Id of a new inventory</returns>
-    public async Task<int> waitForInventoryId(int delay = 50) {
+    public async Task<int> waitForInventoryId(int delay = 50, int maxtries = 20) {
+        int tries = 0;
         this.inventoryNeeded = true;
         while (this.inventoryId == 0) {
             await Task.Delay(50);
+            tries++;
+            if (tries > maxtries)
+                return 0;
         }
         int newId = this.inventoryId;
         this.inventoryId = 0;
@@ -99,16 +118,15 @@ class MineplexBot : ChatBot {
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Container of the new inventory</returns>
     public async Task<Container> waitForInventory(string name, int delay = 50, int maxTries = 3) {
-        int tries = 1;
-        while (true) {
-            if (tries > maxTries)
-                return null;
+        int tries = 0;
+        while (tries < maxTries) {
             int newId = await waitForInventoryId(delay);
             Container newInv = GetInventories()[newId];
             if (MatchesNoCap(newInv.Title, name))
                 return newInv;
             tries++;
         }
+        throw new Exception("Inventory not found after timeout !");
         return null;
     }
 
@@ -213,10 +231,10 @@ class MineplexBot : ChatBot {
 
     /// <summary>
     /// Opens the /game menu by right clicking the melon
-    /// Can choose to either use the item or command (item by default)
+    /// Can choose to either use the item or command (command by default)
     /// The command is always available, the item is (looks to be) faster
     /// </summary>
-    private async Task<Container> openMelon(bool useItem = true) {
+    private async Task<Container> openMelon(bool useItem = false) {
         if (useItem) {
             ChangeSlot(7);
             UseItemInHand();
@@ -229,7 +247,7 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Gives Co Owner perms to all players specified
     /// </summary>
-    private async void giveCoOwn(List<string> players) {
+    private async Task giveCoOwn(List<string> players) {
         Container melon = await openMelon();
         Container coOwnContainer = await clickInventoryContainer(
             melon,
@@ -262,15 +280,6 @@ class MineplexBot : ChatBot {
             CloseInventory(invId);
         }
         PrintChat("Closed all inventories");
-    }
-
-    /// <summary>
-    /// Reloads the bot
-    /// </summary>
-    private void reloadBot() {
-        PrintChat("Reloading bot");
-        PerformInternalCommand("script ./owo.cs");
-        UnloadBot();
     }
 
     /// <summary>
@@ -318,7 +327,7 @@ class MineplexBot : ChatBot {
     /// incrementSlot makes it so that if yes it goes to the next map before selecting it
     /// If no args, it'll also start the map
     /// </summary>
-    private async void clickOnMap(bool incrementSlot, List<string> args) {
+    private async Task clickOnMap(bool incrementSlot, List<string> args) {
         if (this.currentGame == "") {
             PrintChat("Please set a game before");
             return;
@@ -341,6 +350,7 @@ class MineplexBot : ChatBot {
 
         if (incrementSlot) {
             this.currentSlot++;
+            this.savedGameMaps++;
 
             if (this.EDGE_SLOTS.Contains(currentSlot)) {
                 this.currentSlot += 2;
@@ -355,10 +365,9 @@ class MineplexBot : ChatBot {
                     await clickNextButton(maps);
                     // else stop
                 } else {
-                    PrintChat("No more maps !");
+                    PrintChat("No more maps ! ("+ this.savedGameMaps + " saved)");
                     return;
                 }
-
             }
         }
 
@@ -402,7 +411,7 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Chooses a game and sets the this.currentGame value
     /// </summary>
-    private async void chooseGame(List<string> args) {
+    private async Task chooseGame(List<string> args) {
         if (args.Count == 0) {
             PrintChat("No game specified !");
             return;
@@ -433,7 +442,7 @@ class MineplexBot : ChatBot {
     /// If nothing in args, will run instantly (shiftclick)
     /// Otherwise, will click normally (and so wait 10s)
     /// </summary>
-    private async void startGame(List<string> args) {
+    private async Task startGame(List<string> args) {
         WindowActionType click = (args == null || args.Count == 0) ? WindowActionType.ShiftClick : WindowActionType.LeftClick;
         Container melon = await openMelon();
         // clickInventory(melon, 10, actionType:click);
@@ -443,17 +452,37 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Stops the game
     /// </summary>
-    private async void stopGame() {
+    private async Task stopGame() {
         Container melon = await openMelon(useItem: false);
         // clickInventory(melon, 19, actionType:click);
         clickInventory(melon, "Stop Game");
     }
 
     /// <summary>
+    /// Sets the options
+    /// </summary>
+    private async Task setOptions() {
+        bool changed = false;
+        Container melon = await openMelon();
+        Container settings = await clickInventoryContainer(melon, "Server Settings", "Server Settings");
+        foreach ((int index, Item item) in settings.Items) {
+            if (item.Type == ItemType.LimeDye) {
+                clickInventory(settings, index, close: false);
+                changed = true;
+            }
+        }
+        CloseInventory(settings.ID);
+        if (changed)
+            PrintChat("Done changing all settings");
+        else
+            PrintChat("No settings were changed");
+    }
+
+    /// <summary>
     /// Lets you choose a map
     /// </summary>
     /// <remarks>UNIMPLEMENTED</remarks>
-    private async void chooseMap(List<string> args) {
+    private async Task chooseMap(List<string> args) {
         if (args.Count == 0) {
             PrintChat("No map specified !");
             return;
@@ -464,6 +493,8 @@ class MineplexBot : ChatBot {
     // ========== VARS HERE ==========
     // name of the private server to join
     private string SERVER_NAME = "COM-BridgesForever-1";
+    // if the mp is a nano mp or no
+    private bool IS_NANO = false;
     // trusted players
     private string[] TRUSTED_PLAYERS = new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" };
     // mp map selector only uses 7 slots, those are the slots outside
@@ -480,11 +511,12 @@ class MineplexBot : ChatBot {
     private int currentPage = 0;
     // current game
     private string currentGame = "";
+    private int savedGameMaps = 0;
 
     /// <summary>
     /// Runs the functions based on the commands ran 
     /// </summary>
-    private void runCmd(string cmd, List<string> args) {
+    private async Task runCmd(string cmd, List<string> args) {
         LogToConsole("§6Received command: " + cmd);
         if (cmd.ToLower() == "reco") {
             ReconnectToTheServer();
@@ -493,11 +525,11 @@ class MineplexBot : ChatBot {
 
         switch (cmd.ToLower()) {
             case "game":
-                chooseGame(args);
+                await chooseGame(args);
                 break;
 
             case "map":
-                chooseMap(args);
+                await chooseMap(args);
                 break;
 
             case "whitelist":
@@ -512,13 +544,13 @@ class MineplexBot : ChatBot {
 
             case "red":
             case "redo":
-                clickOnMap(false, args);
+                await clickOnMap(false, args);
                 break;
 
             case "cnt":
             case "continue":
             case "next":
-                clickOnMap(true, args);
+                await clickOnMap(true, args);
                 break;
 
             case "setindex":
@@ -528,7 +560,7 @@ class MineplexBot : ChatBot {
                 break;
 
             case "coown":
-                giveCoOwn(args);
+                await giveCoOwn(args);
                 break;
 
             case "caa":
@@ -537,16 +569,21 @@ class MineplexBot : ChatBot {
                 break;
 
             case "start":
-                startGame(args);
+                await startGame(args);
                 break;
 
             case "stop":
-                stopGame();
+                await stopGame();
                 break;
 
             case "rl":
             case "reload":
                 reloadBot();
+                break;
+
+            case "setopts":
+            case "setoptions":
+                await setOptions();
                 break;
 
             default:
@@ -558,7 +595,7 @@ class MineplexBot : ChatBot {
     /// Gets every text message, reject invalid entries and get its json items
     /// Then sends it to grabCommand() and grabMapAuthor()
     /// </summary>
-    public override void GetText(string text, string? json) {
+    public override async void GetText(string text, string? json) {
         if (json.Length < 65
             || json.ToLower().Contains("shop")
             || GetVerbatim(json.Substring(0, 65)).Contains("> ")
@@ -575,7 +612,6 @@ class MineplexBot : ChatBot {
         if (json.Contains("[B]"))
             return;
 
-
         JObject rss = JObject.Parse(json);
 
         if (!rss.ContainsKey("extra"))
@@ -586,13 +622,20 @@ class MineplexBot : ChatBot {
 
         if (count < 3)
             return;
+        
+        // "1st place..." texts
+        if (items[0].ToString() == " ")
+            return;
+
+        if (items[0]["text"].ToString() == "Map - ")
+            grabMapAuthor(items);
 
 
         grabCommand(items, count);
-        grabMapAuthor(items);
+
     }
 
-    private void grabCommand(JArray items, int count) {
+    private async void grabCommand(JArray items, int count) {
         string username = items[count - 2]["text"].ToString();
 
         if (!this.TRUSTED_PLAYERS.Contains(username.ToLower()))
@@ -603,10 +646,80 @@ class MineplexBot : ChatBot {
         string command = args.First();
         args.RemoveAt(0);
 
-        runCmd(command, args);
+        try {
+            await runCmd(command, args);
+        } catch (Exception e) {
+            // Chat
+            PrintChat("Something went wrong! See console for full stack trace");
+            string errstr = "Error '" + e.Message +"' @ '" + e.TargetSite + "'";
+            PrintChat(errstr.Substring(0, (errstr.Length <= 256) ? errstr.Length : 256));
+            // Console
+            LogToConsole("§4====================");
+            LogToConsole("§cError '" + e.Message +"' near " + e.TargetSite);
+            LogToConsole("§4====================");
+            LogToConsole(e.StackTrace);
+            LogToConsole("§4====================");
+        }
     }
 
     private void grabMapAuthor(JArray items) {
-        LogToConsole(items);
+        string map = items[1]["text"].ToString();
+        string author = items[3]["text"].ToString();
+        new CSVManagement(map, author, this.currentGame, this.IS_NANO).updateCSV();
+    }
+}
+
+// Finally another class
+class CSVManagement {
+    private string map;
+    private string author;
+    private string game;
+    private bool isNano;
+
+    private string csvPath;
+    private string standalonePath = "CSVs/info.txt";
+
+
+    public CSVManagement(string map, string author, string game, bool isNano) {
+        this.map = map;
+        this.author = author;
+        this.game = game;
+        this.isNano = isNano;
+        this.csvPath = "CSVs/" + game + ".csv";
+    }
+
+    private void updateDataTxt(string line) {
+        File.WriteAllTextAsync(this.standalonePath, line  + Environment.NewLine);
+    }
+
+    private string genLine() {
+        string full = "";
+        if (this.isNano)
+            full += this.game + "\t";
+        full += this.map + "\t" + this.author + "\t";
+        return full;
+    }
+    private string genHeader() {
+        string full = "";
+        if (this.isNano)
+            full += "minigame\t";
+        full += "name\tbuilder\tcommentaries";
+        return full;
+    }
+
+    public void updateCSV() {
+        Directory.CreateDirectory("CSVs");
+
+        if (!File.Exists(this.csvPath)) {
+            File.WriteAllText(this.csvPath, genHeader() + Environment.NewLine);
+        }
+
+        string line = genLine();
+
+        if (!File.ReadLines(this.csvPath).Contains(line)) {
+            File.AppendAllTextAsync(this.csvPath, line + Environment.NewLine);
+        }
+
+        this.updateDataTxt(line);
     }
 }

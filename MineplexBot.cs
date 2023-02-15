@@ -3320,7 +3320,10 @@ public enum WindowActionType {
 }
 
 
-// split that shit here
+// ==== PARTS ABOVE ARE TO BE STRIPPED ====
+// ==== RUN INSTALL.SH TO STRIP & MOVE ====
+// ====    TO THE PROPER DIRECTORY     ====
+
 
 //MCCScript 1.0
 
@@ -3328,7 +3331,7 @@ public enum WindowActionType {
 
 //using MinecraftClient.CommandHandler;
 
-//dll Newtonsoft.Json.dll
+//dll ./scripts/libs/Newtonsoft.Json.dll
 //using Newtonsoft.Json.Linq;
 
 

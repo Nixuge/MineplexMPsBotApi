@@ -4,7 +4,7 @@
 
 //using MinecraftClient.CommandHandler;
 
-//dll Newtonsoft.Json.dll
+//dll ./scripts/libs/Newtonsoft.Json.dll
 //using Newtonsoft.Json.Linq;
 
 

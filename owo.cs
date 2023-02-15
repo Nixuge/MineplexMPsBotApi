@@ -11,10 +11,17 @@ MCC.LoadBot(new MineplexBot());
 //MCCScript Extensions
 class MineplexBot : ChatBot {
     public override void Initialize() {
-        LogToConsole("§aWorking");
+        // Note: this may try to say "Done loading!" while in spawn,
+        // altho since you can't talk in it without moving it doesn't matter
+        JoinServer();
+        PrintChat("Done loading !");
         if (!GetInventoryEnabled()) {
             LogToConsole("§4InventoryHandle disabled ! Can't interract w containers !");
         }
+    }
+
+    public virtual void AfterGameJoined() {
+        JoinServer();
     }
 
 
@@ -51,6 +58,12 @@ class MineplexBot : ChatBot {
         return GetVerbatim(string1).ToLower() == GetVerbatim(string2).ToLower();
     }
 
+    /// <summary>
+    /// Joins the private server
+    /// </summary>
+    public void JoinServer() {
+        SendText("/sv " + this.SERVER_NAME);
+    }
 
     /// <summary>
     /// Updates the inventoryId of the class when an inventory is needed
@@ -88,7 +101,7 @@ class MineplexBot : ChatBot {
     public async Task<Container> waitForInventory(string name, int delay = 50, int maxTries = 3) {
         int tries = 1;
         while (true) {
-            if (tries > maxTries) 
+            if (tries > maxTries)
                 return null;
             int newId = await waitForInventoryId(delay);
             Container newInv = GetInventories()[newId];
@@ -230,13 +243,13 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Toggles all specified players from the servers whitelist
     /// </summary>
-    /// <remarks>If none specified, toggles nixuge, a4y, fc0, wf0 and dxrrymxxnkid</remarks>
+    /// <remarks>If none specified, toggles all players in TRUSTED_PLAYERS</remarks>
     private void addToWhitelist(List<string> players) {
         //note: nasty bug w that one since "dxrrymxxnkid" is in another color 
-        if (players.Count == 0) {
-            players = new List<string> { "nixuge", "a4y", "fc0", "wf0", "dxrrymxxnkid" };
-        }
-        SendText("/whitelist " + String.Join(" ", players.ToArray()));
+        if (players.Count == 0)
+            SendText("/whitelist " + String.Join(" ", this.TRUSTED_PLAYERS));
+        else
+            SendText("/whitelist " + String.Join(" ", players.ToArray()));
     }
 
     /// <summary>
@@ -373,11 +386,11 @@ class MineplexBot : ChatBot {
         }
         bool nextPage = false;
         foreach ((int index, Item item) in container.Items) {
-            if (MatchesNoCap(item.DisplayName, gameName)) 
+            if (MatchesNoCap(item.DisplayName, gameName))
                 return (container, index);
             else if (MatchesNoCap(item.DisplayName, "next page"))
                 nextPage = true;
-            
+
         }
         if (nextPage) {
             await clickNextButton(container);
@@ -449,6 +462,10 @@ class MineplexBot : ChatBot {
     }
 
     // ========== VARS HERE ==========
+    // name of the private server to join
+    private string SERVER_NAME = "COM-BridgesForever-1";
+    // trusted players
+    private string[] TRUSTED_PLAYERS = new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" };
     // mp map selector only uses 7 slots, those are the slots outside
     private int[] EDGE_SLOTS = { 17, 26, 35, 44 };
     // next page arrow index
@@ -538,13 +555,24 @@ class MineplexBot : ChatBot {
     }
 
     /// <summary>
-    /// Gets every text message and grabs their author and args
+    /// Gets every text message, reject invalid entries and get its json items
+    /// Then sends it to grabCommand() and grabMapAuthor()
     /// </summary>
     public override void GetText(string text, string? json) {
-        if (json.Length < 25
+        if (json.Length < 65
             || json.ToLower().Contains("shop")
-            || GetVerbatim(json.Substring(0, 25)).Contains("> ")
+            || GetVerbatim(json.Substring(0, 65)).Contains("> ")
         )
+            return;
+
+        // rejoin if kicked
+        if (json.Contains("You were kicked from")) {
+            JoinServer();
+            return;
+        }
+
+        // bots don't react to their own messages
+        if (json.Contains("[B]"))
             return;
 
 
@@ -559,11 +587,16 @@ class MineplexBot : ChatBot {
         if (count < 3)
             return;
 
+
+        grabCommand(items, count);
+        grabMapAuthor(items);
+    }
+
+    private void grabCommand(JArray items, int count) {
         string username = items[count - 2]["text"].ToString();
 
-        if (!new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" }.Contains(username.ToLower()))
+        if (!this.TRUSTED_PLAYERS.Contains(username.ToLower()))
             return;
-
 
         string message = items[count - 1]["extra"][0].ToString();
         List<string> args = message.Split(' ').ToList();
@@ -571,5 +604,9 @@ class MineplexBot : ChatBot {
         args.RemoveAt(0);
 
         runCmd(command, args);
+    }
+
+    private void grabMapAuthor(JArray items) {
+        LogToConsole(items);
     }
 }

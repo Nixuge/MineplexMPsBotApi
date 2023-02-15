@@ -3729,14 +3729,12 @@ class MineplexBot : ChatBot {
         if (container == null || index == 0) {
             PrintChat("Specified game invalid (" + gameName + ")");
         } else {
-            LogToConsole(getCapitalizedItemName(container, gameName));
             this.currentGame = getCapitalizedItemName(container, gameName);
             this.currentPage = 0;
             clickInventory(container, index);
             CloseInventory(container.ID);
             PrintChat("Successfully set game to " + this.currentGame);
         }
-
     }
 
     /// <summary>

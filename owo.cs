@@ -38,6 +38,21 @@ class MineplexBot : ChatBot {
 
 
     /// <summary>
+    /// return if an item display name & a string (both lowered & verbatimed) match
+    /// </summary>
+    public bool MatchesNoCap(Item item, string string2) {
+        return MatchesNoCap(item.DisplayName, string2);
+    }
+
+    /// <summary>
+    /// return if 2 strings lowered & verbatimed match
+    /// </summary>
+    public bool MatchesNoCap(string string1, string string2) {
+        return GetVerbatim(string1).ToLower() == GetVerbatim(string2).ToLower();
+    }
+
+
+    /// <summary>
     /// Updates the inventoryId of the class when an inventory is needed
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
@@ -70,12 +85,16 @@ class MineplexBot : ChatBot {
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Container of the new inventory</returns>
-    public async Task<Container> waitForInventory(string name, int delay = 50) {
+    public async Task<Container> waitForInventory(string name, int delay = 50, int maxTries = 3) {
+        int tries = 1;
         while (true) {
+            if (tries > maxTries) 
+                return null;
             int newId = await waitForInventoryId(delay);
             Container newInv = GetInventories()[newId];
-            if (GetVerbatim(newInv.Title.ToLower()) == name.ToLower())
+            if (MatchesNoCap(newInv.Title, name))
                 return newInv;
+            tries++;
         }
         return null;
     }
@@ -88,10 +107,10 @@ class MineplexBot : ChatBot {
     private void clickInventory(
         Container container, string itemName,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true) {
-        foreach (KeyValuePair<int, Item> entry in newDictionary(container.Items)) {
-            if (GetVerbatim(entry.Value.DisplayName.ToLower()) == itemName.ToLower()) {
-                clickInventory(container, entry.Key, actionType, close);
-            }
+
+        foreach ((int index, Item item) in newDictionary(container.Items)) {
+            if (MatchesNoCap(item.DisplayName, itemName))
+                clickInventory(container, index, actionType, close);
         }
     }
 
@@ -147,10 +166,9 @@ class MineplexBot : ChatBot {
     /// </summary>
     private void listItemNames(Container container) {
         LogToConsole("Here's a list of all items in your container:");
-        foreach (KeyValuePair<int, Item> entry in container.Items) {
-            Item item = entry.Value;
+        foreach ((int index, Item item) in container.Items) {
             LogToConsole(
-                entry.Key + ": " + GetVerbatim(item.DisplayName) + " (" + item.Type.ToString() + ")"
+                index + ": " + GetVerbatim(item.DisplayName) + " (" + item.Type.ToString() + ")"
             );
         }
     }
@@ -175,9 +193,8 @@ class MineplexBot : ChatBot {
     /// </summary>
     private void listContainers() {
         LogToConsole("Here's a list of all containers currently open:");
-        foreach (KeyValuePair<int, Container> entry in GetInventories()) {
-            Container container = entry.Value;
-            LogToConsole(entry.Key + ": " + GetVerbatim(container.Title));
+        foreach ((int index, Container container) in GetInventories()) {
+            LogToConsole(index + ": " + GetVerbatim(container.Title));
         }
     }
 
@@ -354,16 +371,15 @@ class MineplexBot : ChatBot {
         if (container == null) {
             container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
         }
-        int newPageIndex = 0;
-        foreach (KeyValuePair<int, Item> entry in container.Items) {
-            if (GetVerbatim(entry.Value.DisplayName.ToLower()) == gameName) {
-                return (container, entry.Key);
-            } else if (GetVerbatim(entry.Value.DisplayName.ToLower()) == "next page") {
-                newPageIndex = entry.Key;
-            }
+        bool nextPage = false;
+        foreach ((int index, Item item) in container.Items) {
+            if (MatchesNoCap(item.DisplayName, gameName)) 
+                return (container, index);
+            else if (MatchesNoCap(item.DisplayName, "next page"))
+                nextPage = true;
+            
         }
-        if (newPageIndex != 0) // = if "next page" item found
-        {
+        if (nextPage) {
             await clickNextButton(container);
             return await searchGamePage(container, gameName);
         }
@@ -391,14 +407,12 @@ class MineplexBot : ChatBot {
         if (container == null || index == 0) {
             PrintChat("Specified game invalid (" + gameName + ")");
         } else {
-            LogToConsole(getCapitalizedItemName(container, gameName));
             this.currentGame = getCapitalizedItemName(container, gameName);
             this.currentPage = 0;
             clickInventory(container, index);
             CloseInventory(container.ID);
             PrintChat("Successfully set game to " + this.currentGame);
         }
-
     }
 
     /// <summary>

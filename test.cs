@@ -3559,10 +3559,10 @@ class ExampleChatBot : ChatBot
 {
     public override void Initialize()
     {
-        LogToConsole("Working");
+        LogToConsole("§aWorking");
         if (!GetInventoryEnabled())
         {
-            LogToConsole("InventoryHandle disabled ! Can't interract w containers !");
+            LogToConsole("§4InventoryHandle disabled ! Can't interract w containers !");
         }
     }
 
@@ -3789,7 +3789,8 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Reloads the bot
     /// </summary>
-    private void reloadBot() {
+    private void reloadBot()
+    {
         PrintChat("Reloading bot");
         PerformInternalCommand("script ./owo.cs");
         UnloadBot();
@@ -3828,7 +3829,7 @@ class ExampleChatBot : ChatBot
     /// Clicks on the "Next Map" arrow (index 53) on the provided Container
     /// </summary>
     /// <remarks>See the commentary inside the function to see why this is required</remarks>
-    private async Task clickNextMap(Container maps)
+    private async Task clickNextButton(Container maps)
     {
         // IMPORTANT NOTE:
         // Due to a nasty bug (-1h30) having an inventory open with the same
@@ -3860,12 +3861,13 @@ class ExampleChatBot : ChatBot
         {
             for (int i = 0; i < this.currentPage; i++)
             {
-                await clickNextMap(maps);
+                await clickNextButton(maps);
             }
         }
 
         // start only
-        if (this.currentSlot == 9 && !incrementSlot) {
+        if (this.currentSlot == 9 && !incrementSlot)
+        {
             this.currentSlot++;
         }
 
@@ -3886,7 +3888,7 @@ class ExampleChatBot : ChatBot
                 {
                     currentPage += 1;
                     currentSlot = FIRST_SLOT;
-                    await clickNextMap(maps);
+                    await clickNextButton(maps);
                     // else stop
                 }
                 else
@@ -3917,7 +3919,6 @@ class ExampleChatBot : ChatBot
         {
             container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
         }
-
         int newPageIndex = 0;
         foreach (KeyValuePair<int, Item> entry in container.Items)
         {
@@ -3932,7 +3933,8 @@ class ExampleChatBot : ChatBot
         }
         if (newPageIndex != 0) // = if "next page" item found
         {
-            return await searchGamePage(await clickInventoryContainer(container, newPageIndex, "Set Map"), gameName);
+            await clickNextButton(container);
+            return await searchGamePage(container, gameName);
         }
         return (null, 0);
     }
@@ -4076,28 +4078,23 @@ class ExampleChatBot : ChatBot
     /// </summary>
     public override void GetText(string text, string? json)
     {
-        if (json.Length < 20)
+        if (json.Length < 25
+            || json.ToLower().Contains("shop")
+            || GetVerbatim(json.Substring(0, 25)).Contains("> ")
+        ) 
             return;
+
 
         JObject rss = JObject.Parse(json);
 
         if (!rss.ContainsKey("extra"))
             return;
 
-
         var items = (JArray)rss["extra"];
         int count = items.Count;
 
-        if (count < 3)
+        if (count < 3) 
             return;
-
-        // could just do if contains > but making sure
-        // string[] annoying_chat = { "Portal> ", "Communities> ", "Track> " };
-        // if (annoying_chat.Contains(GetVerbatim(items[0]["text"].ToString())))
-        //     return;
-        if (GetVerbatim(items[0]["text"].ToString()).Contains("> "))
-            return;
-
 
         string username = items[count - 2]["text"].ToString();
 

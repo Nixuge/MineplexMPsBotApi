@@ -3591,8 +3591,6 @@ class ExampleChatBot : ChatBot
     /// Updates the inventoryId of the class when an inventory is needed
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
-
-    ///
     public override void OnInventoryOpen(int inventoryId)
     {
         if (this.inventoryNeeded)
@@ -3786,6 +3784,10 @@ class ExampleChatBot : ChatBot
         PrintChat("Closed all inventories");
     }
 
+    /// <summary>
+    /// Sets the map inventory index for the current game
+    /// </summary>
+    /// <remarks>1st arg = index; 2nd arg (optional) = page</remarks>
     private void setIndex(List<string> args)
     {
         if (this.currentGame == "")
@@ -3811,6 +3813,10 @@ class ExampleChatBot : ChatBot
         }
     }
 
+    /// <summary>
+    /// Clicks on the "Next Map" arrow (index 53) on the provided Container
+    /// </summary>
+    /// <remarks>See the commentary inside the function to see why this is required</remarks>
     private async Task clickNextMap(Container maps)
     {
         // IMPORTANT NOTE:
@@ -3823,6 +3829,10 @@ class ExampleChatBot : ChatBot
         await Task.Delay(this.NEXT_INVENTORY_DELAY);
     }
 
+    /// <summary>
+    /// Selects a map from the current game using the current index & page. 
+    /// incrementSlot makes it so that if yes it goes to the next map before selecting it
+    /// </summary>
     private async void clickOnMap(bool incrementSlot)
     {
         if (this.currentGame == "")
@@ -3831,9 +3841,10 @@ class ExampleChatBot : ChatBot
             return;
         }
 
-        Container melon = await openMelon();
-        Container games = await clickInventoryContainer(melon, "Set Game", "Set Game");
+        Container games = await searchGamePage(null, this.currentGame);
+
         Container maps = await clickInventoryContainer(games, this.currentGame, "Set Map", WindowActionType.RightClick);
+        
         if (this.currentPage > 0)
         {
             for (int i = 0; i < this.currentPage; i++)
@@ -3871,43 +3882,47 @@ class ExampleChatBot : ChatBot
             }
         }
 
-        clickInventory(maps, currentSlot);
         // for some reason sometimes it doesn't seem to detect the item?
         string mapName = maps.Items.ContainsKey(currentSlot) ? GetVerbatim(maps.Items[currentSlot].DisplayName) : "map";
+        
+        clickInventory(maps, currentSlot);
+        
         PrintChat("Successfully set map to \"" + mapName + "\" (slot " + currentSlot + ")");
     }
 
-    private async void searchGamePageClick(Container container, string gameName)
+    /// <summary>
+    /// Searches for a specified game inside a specified Container
+    /// </summary>
+    /// <remarks>container can be null and will automaticallt get the "set game" page | UNTESTED AS I DONT HAVE ACCESS</remarks>
+    /// <returns>A tuple with the tuple containing the game item and the item's index</returns>
+    private async Task<(Container, int)> searchGamePage(Container container, string gameName)
     {
+        if (container == null) {
+            container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
+        }
+
         int newPageIndex = 0;
         foreach (KeyValuePair<int, Item> entry in container.Items)
         {
             if (GetVerbatim(entry.Value.DisplayName.ToLower()) == gameName)
             {
-                LogToConsole(entry.Value.DisplayName);
-                this.currentGame = gameName;
-                this.currentPage = 0;
-                clickInventory(container, entry.Key);
-                CloseInventory(container.ID);
-                PrintChat("Successfully set game to " + this.currentGame);
-                return;
+                return (container, entry.Key);
             }
             else if (GetVerbatim(entry.Value.DisplayName.ToLower()) == "next page")
-            { //todo: check if next page item doesnt have any padding
+            {
                 newPageIndex = entry.Key;
             }
         }
-        if (newPageIndex != 0)
+        if (newPageIndex != 0) // = if "next page" item found
         {
-            // No need to bother w returns here honestly
-            //Todo: use index instead of searching again
-            searchGamePageClick(await clickInventoryContainer(container, "next page", "Set Map"), gameName);
+            return searchGamePageClick(await clickInventoryContainer(container, newPageIndex, "Set Map"), gameName);
         }
-        else
-        {
-            PrintChat("Specified game invalid (" + gameName + ")");
-        }
+        return (null, null);
     }
+
+    /// <summary>
+    /// Chooses a game and sets the this.currentGame value
+    /// </summary>
     private async void chooseGame(List<string> args)
     {
         if (args.Count == 0)
@@ -3924,12 +3939,25 @@ class ExampleChatBot : ChatBot
             return;
         }
 
-        Container melon = await openMelon();
-        Container setGame = await clickInventoryContainer(melon, "Set Game", "Set Game");
 
-        searchGamePageClick(setGame, gameName);
+        var (container, index) = await searchGamePageClick(null, gameName);
+
+        if (container == null || index == 0) {
+            PrintChat("Specified game invalid (" + gameName + ")");
+        } else {
+            this.currentGame = gameName;
+            this.currentPage = 0;
+            clickInventory(container, index);
+            CloseInventory(container.ID);
+            PrintChat("Successfully set game to " + this.currentGame);
+        }
+
     }
-
+    
+    /// <summary>
+    /// Lets you choose a map
+    /// </summary>
+    /// <remarks>UNIMPLEMENTED</remarks>
     private async void chooseMap(List<string> args)
     {
         if (args.Count == 0)
@@ -3940,7 +3968,7 @@ class ExampleChatBot : ChatBot
         PrintChat("Unimplemented !");
     }
 
-    // ===== VARS HERE =====
+    // ========== VARS HERE ==========
     private int[] EDGE_SLOTS = { 17, 26, 35, 44 };
     private int NEXT_PAGE_INDEX = 53;
     private int FIRST_SLOT = 10;
@@ -3949,6 +3977,9 @@ class ExampleChatBot : ChatBot
     private int currentPage = 0;
     private string currentGame = "";
 
+    /// <summary>
+    /// Runs the functions based on the commands ran 
+    /// </summary>
     private void runCmd(string cmd, List<string> args)
     {
         LogToConsole("§6Received command: " + cmd);
@@ -4010,6 +4041,9 @@ class ExampleChatBot : ChatBot
         }
     }
 
+    /// <summary>
+    /// Gets every text message and grabs their author and args
+    /// </summary>
     public override void GetText(string text, string? json)
     {
         if (json.Length < 20)

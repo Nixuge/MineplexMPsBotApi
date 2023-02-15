@@ -3566,6 +3566,7 @@ class ExampleChatBot : ChatBot
         }
     }
 
+
     /// <summary>
     /// Prints something in minecraft chat as a bot
     /// </summary>
@@ -3774,14 +3775,23 @@ class ExampleChatBot : ChatBot
     /// <summary>
     /// Closes all open inventories
     /// </summary>
-    /// <remarks>Made to fix a glitch but not working as of now, to rework</remarks>
+    /// <remarks>Not really useful</remarks>
     private void closeAll()
     {
+        //TODO: test & fix
         foreach (int invId in GetInventories().Keys)
         {
             CloseInventory(invId);
         }
         PrintChat("Closed all inventories");
+    }
+
+    /// <summary>
+    /// Reloads the bot
+    /// </summary>
+    private void reloadBot() {
+        PerformInternalCommand("script ./owo.cs");
+        UnloadBot();
     }
 
     /// <summary>
@@ -3841,10 +3851,10 @@ class ExampleChatBot : ChatBot
             return;
         }
 
-        Container games = await searchGamePage(null, this.currentGame);
+        (Container games, int index) = await searchGamePage(null, this.currentGame);
 
-        Container maps = await clickInventoryContainer(games, this.currentGame, "Set Map", WindowActionType.RightClick);
-        
+        Container maps = await clickInventoryContainer(games, index, "Set Map", WindowActionType.RightClick);
+
         if (this.currentPage > 0)
         {
             for (int i = 0; i < this.currentPage; i++)
@@ -3884,9 +3894,9 @@ class ExampleChatBot : ChatBot
 
         // for some reason sometimes it doesn't seem to detect the item?
         string mapName = maps.Items.ContainsKey(currentSlot) ? GetVerbatim(maps.Items[currentSlot].DisplayName) : "map";
-        
+
         clickInventory(maps, currentSlot);
-        
+
         PrintChat("Successfully set map to \"" + mapName + "\" (slot " + currentSlot + ")");
     }
 
@@ -3897,7 +3907,8 @@ class ExampleChatBot : ChatBot
     /// <returns>A tuple with the tuple containing the game item and the item's index</returns>
     private async Task<(Container, int)> searchGamePage(Container container, string gameName)
     {
-        if (container == null) {
+        if (container == null)
+        {
             container = await clickInventoryContainer(await openMelon(), "Set Game", "Set Game");
         }
 
@@ -3915,9 +3926,9 @@ class ExampleChatBot : ChatBot
         }
         if (newPageIndex != 0) // = if "next page" item found
         {
-            return searchGamePageClick(await clickInventoryContainer(container, newPageIndex, "Set Map"), gameName);
+            return await searchGamePage(await clickInventoryContainer(container, newPageIndex, "Set Map"), gameName);
         }
-        return (null, null);
+        return (null, 0);
     }
 
     /// <summary>
@@ -3939,12 +3950,14 @@ class ExampleChatBot : ChatBot
             return;
         }
 
+        (Container container, int index) = await searchGamePage(null, gameName);
 
-        var (container, index) = await searchGamePageClick(null, gameName);
-
-        if (container == null || index == 0) {
+        if (container == null || index == 0)
+        {
             PrintChat("Specified game invalid (" + gameName + ")");
-        } else {
+        }
+        else
+        {
             this.currentGame = gameName;
             this.currentPage = 0;
             clickInventory(container, index);
@@ -3953,7 +3966,7 @@ class ExampleChatBot : ChatBot
         }
 
     }
-    
+
     /// <summary>
     /// Lets you choose a map
     /// </summary>
@@ -3969,12 +3982,19 @@ class ExampleChatBot : ChatBot
     }
 
     // ========== VARS HERE ==========
+    // mp map selector only uses 7 slots, those are the slots outside
     private int[] EDGE_SLOTS = { 17, 26, 35, 44 };
+    // next page arrow index
     private int NEXT_PAGE_INDEX = 53;
+    // first map slot index
     private int FIRST_SLOT = 10;
+    // inventory after clicking on the next page button in map selector
     private int NEXT_INVENTORY_DELAY = 500;
+    // current map slot index
     private int currentSlot = 10;
+    // current page 
     private int currentPage = 0;
+    // current game
     private string currentGame = "";
 
     /// <summary>
@@ -4035,6 +4055,10 @@ class ExampleChatBot : ChatBot
             case "closeall":
                 closeAll();
                 break;
+            case "rl":
+            case "reload":
+                reloadBot();
+                break;
 
             default:
                 break;
@@ -4047,46 +4071,39 @@ class ExampleChatBot : ChatBot
     public override void GetText(string text, string? json)
     {
         if (json.Length < 20)
-        {
             return;
-        }
-
-        //todo: ithink there's still a way to crash w nasty errors here
-        //check if i can fix it (need to enable logging jsons below)
-        // LogToConsole(json);
 
         JObject rss = JObject.Parse(json);
 
         if (!rss.ContainsKey("extra"))
-        {
-            LogToConsole("Nasty error log");
             return;
-        }
+
 
         var items = (JArray)rss["extra"];
         int count = items.Count;
 
         if (count < 3)
-        {
             return;
-        }
-        //could just do if contains > but making sure
-        string[] annoying_chat = { "Portal> ", "Communities> ", "Track> " };
-        if (annoying_chat.Contains(GetVerbatim(items[0]["text"].ToString())))
-        {
+
+        // could just do if contains > but making sure
+        // string[] annoying_chat = { "Portal> ", "Communities> ", "Track> " };
+        // if (annoying_chat.Contains(GetVerbatim(items[0]["text"].ToString())))
+        //     return;
+        if (GetVerbatim(items[0]["text"].ToString()).Contains("> "))
             return;
-        }
+
 
         string username = items[count - 2]["text"].ToString();
+
+        if (!new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" }.Contains(username.ToLower()))
+            return;
+
+
         string message = items[count - 1]["extra"][0].ToString();
+        List<string> args = message.Split(' ').ToList();
+        string command = args.First();
+        args.RemoveAt(0);
 
-        if (new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" }.Contains(username.ToLower()))
-        {
-            List<string> args = message.Split(' ').ToList();
-            string command = args.First();
-            args.RemoveAt(0);
-
-            runCmd(command, args);
-        }
+        runCmd(command, args);
     }
 }

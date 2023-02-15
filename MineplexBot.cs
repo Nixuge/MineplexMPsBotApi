@@ -3367,6 +3367,9 @@ class MineplexBot : ChatBot {
     /// Prints something in minecraft chat as a bot
     /// </summary>
     public void PrintChat(string text) {
+        //TODO: 
+        // a lot of work for not much but make it so that
+        // only 
         SendText("[B] " + text);
     }
 
@@ -3541,7 +3544,7 @@ class MineplexBot : ChatBot {
         }
         return "NONE";
     }
-    
+
     /// <summary>
     /// Returns the name of an item with a specified index 
     /// inside a provided container
@@ -3639,8 +3642,8 @@ class MineplexBot : ChatBot {
             PrintChat("Set page to " + args[1]);
         }
     }
-    
-    
+
+
     /// <summary>
     /// Checks if an item is at a specified index with a specified index in a Container
     /// </summary>
@@ -3753,7 +3756,7 @@ class MineplexBot : ChatBot {
         }
 
         return (null, 0);
-    } 
+    }
 
     /// <summary>
     /// searchItemContainerMultiPage(...) wrapper for game searching specifically
@@ -3845,13 +3848,19 @@ class MineplexBot : ChatBot {
             PrintChat("No map specified !");
             return;
         }
+
+        if (this.currentGame == "") {
+            PrintChat("No game specified !");
+            return;
+        }
+
         string mapName = String.Join(" ", args.ToArray()).ToLower();
 
         (Container games, int gameItemIndex) = await searchGamePage(null, this.currentGame);
         Container mapsFirstPage = await clickInventoryContainer(games, gameItemIndex, "Set Map", WindowActionType.RightClick);
 
-        (Container mapsRightPage, int mapItemindex) =  await searchItemContainerMultiPage(mapsFirstPage, mapName);
-        
+        (Container mapsRightPage, int mapItemindex) = await searchItemContainerMultiPage(mapsFirstPage, mapName);
+
         mapName = getCapitalizedItemName(mapsRightPage, mapItemindex);
 
         if (mapsRightPage == null || mapItemindex == 0)
@@ -3885,15 +3894,21 @@ class MineplexBot : ChatBot {
     private string currentGame = "";
     private int savedGameMaps = 0;
 
+    // is a command running
+    private bool isCommandRunning = false;
+
     /// <summary>
     /// Runs the functions based on the commands ran 
     /// </summary>
     private async Task runCommand(string cmd, List<string> args) {
         LogToConsole("§6Received command: " + cmd);
-        if (cmd.ToLower() == "reco") {
-            ReconnectToTheServer();
+
+        if (this.isCommandRunning) {
+            PrintChat("Command currently running, please wait");
             return;
         }
+
+        this.isCommandRunning = true;
 
         switch (cmd.ToLower()) {
             case "join":
@@ -3906,6 +3921,12 @@ class MineplexBot : ChatBot {
 
             case "map":
                 await chooseMap(args);
+                break;
+            
+            case "mp":
+            case "maps":
+                await chooseMap(args);
+                await startGame(null);
                 break;
 
             case "whitelist":
@@ -3969,6 +3990,7 @@ class MineplexBot : ChatBot {
             default:
                 break;
         }
+        this.isCommandRunning = false;
     }
 
     /// <summary>
@@ -3982,6 +4004,14 @@ class MineplexBot : ChatBot {
         //     Thread.Sleep(200);
         //     return;
         // }
+
+
+        // THIS LOOKS WEIRD FOR SOME REASON
+        // WHY?
+        // I can't seem to be able to use .Contains() on json objects
+        //// getting an Assembly error for Ithingy (prolly because of Newtonsoft Json)
+        // so i basically have to just guess and hope 
+        // hence why this normally simple thing is long and overcomplicated
 
         if (json.Length < 65
             || json.ToLower().Contains("shop")
@@ -4067,7 +4097,7 @@ class CSVManagement {
 
     private string csvPath;
     private string standalonePath = "CSVs/info.txt";
-
+    private string csvLine;
 
     public CSVManagement(string map, string author, string game, bool isNano) {
         this.map = map;
@@ -4075,10 +4105,11 @@ class CSVManagement {
         this.game = game;
         this.isNano = isNano;
         this.csvPath = "CSVs/" + game + ".csv";
+        this.csvLine = genLine();
     }
 
-    private void updateDataTxt(string line) {
-        File.WriteAllTextAsync(this.standalonePath, line + Environment.NewLine);
+    private void updateDataTxt() {
+        File.WriteAllTextAsync(this.standalonePath, this.game + "\t" + this.csvLine);
     }
 
     private string genLine() {
@@ -4103,12 +4134,10 @@ class CSVManagement {
             File.WriteAllText(this.csvPath, genHeader() + Environment.NewLine);
         }
 
-        string line = genLine();
-
-        if (!File.ReadLines(this.csvPath).Contains(line)) {
-            File.AppendAllTextAsync(this.csvPath, line + Environment.NewLine);
+        if (!File.ReadLines(this.csvPath).Contains(this.csvLine)) {
+            File.AppendAllTextAsync(this.csvPath, this.csvLine + Environment.NewLine);
         }
 
-        this.updateDataTxt(line);
+        this.updateDataTxt();
     }
 }

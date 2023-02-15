@@ -244,6 +244,7 @@ class ExampleChatBot : ChatBot
     /// Reloads the bot
     /// </summary>
     private void reloadBot() {
+        PrintChat("Reloading bot");
         PerformInternalCommand("script ./owo.cs");
         UnloadBot();
     }
@@ -315,6 +316,11 @@ class ExampleChatBot : ChatBot
             {
                 await clickNextMap(maps);
             }
+        }
+
+        // start only
+        if (this.currentSlot == 9 && !incrementSlot) {
+            this.currentSlot++;
         }
 
         if (incrementSlot)
@@ -445,7 +451,7 @@ class ExampleChatBot : ChatBot
     // inventory after clicking on the next page button in map selector
     private int NEXT_INVENTORY_DELAY = 500;
     // current map slot index
-    private int currentSlot = 10;
+    private int currentSlot = 9;
     // current page 
     private int currentPage = 0;
     // current game

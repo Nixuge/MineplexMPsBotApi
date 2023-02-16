@@ -88,10 +88,11 @@ class Map:
 def process_zips(map: Map) -> str | None:
     # Rename ZIP file to map name
     zips: list[str] = []
+    toRemove: list[str] = []
     for file in os.listdir(SAVES):
         # Remove folders
         if file in ["eu_mineplex_com", "us_mineplex_com", "clans_mineplex_com"]:
-            os.system(f"rm -r \"{SAVES}{file}\"")  # dangeroous
+            toRemove.append(file)
 
         # Add all zips to list
         if file.split('.')[-1] == "zip":
@@ -101,9 +102,15 @@ def process_zips(map: Map) -> str | None:
         print("Renaming first zip only.")
     
     if len(zips) > 0:
+        for file in toRemove:
+            os.system(f"rm -r \"{SAVES}{file}\"")  # dangeroous
+        
         zipname = SAVES + map.name + ".zip"
         os.rename(SAVES + zips[0], zipname)
         return zipname
+
+    elif len(toRemove) > 0:
+        print(bcolors.FAIL + "No zip to move but a folder found, perhaps try saving the map" + bcolors.ENDC)
 
 
 def print_info(map: Map) -> None:

@@ -4084,6 +4084,7 @@ class MineplexBot : ChatBot {
             LogToConsole("§4====================");
 
             closeAll();
+            this.isCommandRunning = false;
         }
     }
 

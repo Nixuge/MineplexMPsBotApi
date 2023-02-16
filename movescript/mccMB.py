@@ -21,6 +21,22 @@ GAME_PATH = f"/home/nix/Mineplex Backup/"
 
 SAVES = "/home/nix/.local/share/multimc/instances/1.8.9 pvp - worlddl/.minecraft/saves/"
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+GAME_NAME_FIXES = {
+    "Cake Wars Solo": "Cake Wars Solo & Duos",
+    "Cake Wars Duos": "Cake Wars Solo & Duos"
+}
 
 class Map:
     nano: bool
@@ -57,6 +73,8 @@ class Map:
         path = ""
         if self.nano:
             path += "Nano Games/"
+        if self.game in GAME_NAME_FIXES:
+            self.game = GAME_NAME_FIXES[self.game]
         path += self.game + "/"
         return path
 
@@ -86,8 +104,6 @@ def process_zips(map: Map) -> str | None:
         zipname = SAVES + map.name + ".zip"
         os.rename(SAVES + zips[0], zipname)
         return zipname
-    else:
-        print("No files found")
 
 
 def print_info(map: Map) -> None:
@@ -127,7 +143,7 @@ def move_zip(zipname: str, map: Map) -> bool:
 
         # if not copy it
         shutil.copyfile(zipname, map.fullPath)
-        print("File moved successfully")
+        # print("File moved successfully")
         # then delete it
         os.remove(zipname)
 
@@ -152,4 +168,11 @@ if __name__ == "__main__":
     if zipname:
         move_success = move_zip(zipname, map)
 
-    print("Move success: " + str(move_success))
+    if move_success:
+        print(bcolors.OKGREEN + bcolors.UNDERLINE + "Move success: True" + bcolors.ENDC)
+    else:
+        if zipname:
+            print(bcolors.FAIL + bcolors.UNDERLINE + "Move success: False" + bcolors.ENDC)
+        else:
+            print(bcolors.WARNING + bcolors.UNDERLINE + "No files found" + bcolors.ENDC)
+

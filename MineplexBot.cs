@@ -3842,7 +3842,6 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Lets you choose a map
     /// </summary>
-    /// <remarks>CURRENTLY BEING IMPLEMENTED</remarks>
     private async Task chooseMap(List<string> args) {
         if (args.Count == 0) {
             PrintChat("No map specified !");
@@ -3874,6 +3873,8 @@ class MineplexBot : ChatBot {
     // ========== VARS HERE ==========
     // name of the private server to join
     private string SERVER_NAME = "COM-BridgesForever-1";
+    // String to match for if we receive a DM
+    private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no
     private bool IS_NANO = false;
     // trusted players
@@ -3921,12 +3922,12 @@ class MineplexBot : ChatBot {
 
             case "map":
                 await chooseMap(args);
+                await startGame(null);
                 break;
             
-            case "mp":
-            case "maps":
+            case "mapns":
+            case "mapn":
                 await chooseMap(args);
-                await startGame(null);
                 break;
 
             case "whitelist":
@@ -4012,6 +4013,11 @@ class MineplexBot : ChatBot {
         //// getting an Assembly error for Ithingy (prolly because of Newtonsoft Json)
         // so i basically have to just guess and hope 
         // hence why this normally simple thing is long and overcomplicated
+
+        if (json.Contains(this.DM_RECOGNIZE)) {
+            await runCommand("stop", null);
+            return;
+        }
 
         if (json.Length < 65
             || json.ToLower().Contains("shop")

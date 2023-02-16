@@ -572,8 +572,8 @@ class MineplexBot : ChatBotPlus {
 
     // ========== VARS HERE ==========
     // name of the private server to join
-    // private string SERVER_NAME = "COM-BridgesForever-1";
-    private string SERVER_NAME = "dxrrymxxnkid-1";
+    private string SERVER_NAME = "COM-BridgesForever-1";
+    // private string SERVER_NAME = "dxrrymxxnkid-1";
     // String to match for if we receive a DM
     private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no
@@ -778,6 +778,7 @@ class MineplexBot : ChatBotPlus {
         } catch (Exception e) {
             if (_try < 3) {
                 PrintChat("Command had an exception, retrying (try " + (_try + 1) + "/3)");
+                this.isCommandRunning = false;
                 await handleRunCommandError(command, args, _try: _try + 1);
                 return;
             }

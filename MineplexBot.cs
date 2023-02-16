@@ -3581,6 +3581,7 @@ class ChatBotPlus : ChatBot {
     // as it could be useful for other servers
 }
 
+
 class MineplexBot : ChatBotPlus {
     public override void Initialize() {
         // Note: may try to say "Done loading!" while in spawn,
@@ -3900,8 +3901,8 @@ class MineplexBot : ChatBotPlus {
 
     // ========== VARS HERE ==========
     // name of the private server to join
-    // private string SERVER_NAME = "COM-BridgesForever-1";
-    private string SERVER_NAME = "dxrrymxxnkid-1";
+    private string SERVER_NAME = "COM-BridgesForever-1";
+    // private string SERVER_NAME = "dxrrymxxnkid-1";
     // String to match for if we receive a DM
     private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no

@@ -3339,40 +3339,17 @@ public enum WindowActionType {
 
 //MCCScript Extensions
 
-class MineplexBot : ChatBot {
-    public override void Initialize() {
-        // Note: may try to say "Done loading!" while in spawn,
-        // altho since you can't talk in it without moving it doesn't matter
-        JoinServer();
-        PrintChat("Done loading !");
-        if (!GetInventoryEnabled()) {
-            LogToConsole("§4InventoryHandle disabled ! Can't interract w containers !");
-        }
-    }
+class ChatBotPlus : ChatBot {
 
-    public async override void AfterGameJoined() {
-        JoinServer();
-        await Task.Delay(500); // just in case server lags (which happens often)
-        JoinServer();
-    }
-
-    private void reloadBot() {
-        closeAll();
-        PrintChat("Reloading bot");
-        PerformInternalCommand("script ./MineplexBot.cs");
-        UnloadBot();
-    }
-
+    // ===== RANDOM UTILS =====
 
     /// <summary>
     /// Prints something in minecraft chat as a bot
     /// </summary>
     public void PrintChat(string text) {
-        //TODO: 
-        // a lot of work for not much but make it so that
-        // only 
         SendText("[B] " + text);
     }
+
 
     /// <summary>
     /// Clones a dictionary of int, items. 
@@ -3393,6 +3370,7 @@ class MineplexBot : ChatBot {
         return MatchesNoCap(item.DisplayName, string2);
     }
 
+
     /// <summary>
     /// return if 2 strings lowered & verbatimed match
     /// </summary>
@@ -3400,12 +3378,11 @@ class MineplexBot : ChatBot {
         return GetVerbatim(string1).ToLower() == GetVerbatim(string2).ToLower();
     }
 
-    /// <summary>
-    /// Joins the private server
-    /// </summary>
-    public void JoinServer() {
-        SendText("/sv " + this.SERVER_NAME);
-    }
+
+    // ===== ON INVENTORY OPEN / INVENTORY WAIT MANAGEMENT =====
+
+    private bool inventoryNeeded = false;
+    private int inventoryId = 0;
 
     /// <summary>
     /// Updates the inventoryId of the class when an inventory is needed
@@ -3416,15 +3393,13 @@ class MineplexBot : ChatBot {
             this.inventoryId = inventoryId;
         }
     }
-    bool inventoryNeeded = false;
-    int inventoryId = 0;
 
     /// <summary>
     /// Grabs the Id of the first inventory that pops after the function is called
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Inventory Id of a new inventory</returns>
-    public async Task<int> waitForInventoryId(int delay = 50, int maxtries = 20) {
+    protected async Task<int> waitForInventoryId(int delay = 50, int maxtries = 20) {
         int tries = 0;
         this.inventoryNeeded = true;
         while (this.inventoryId == 0) {
@@ -3444,7 +3419,7 @@ class MineplexBot : ChatBot {
     /// </summary>
     /// <remarks>Dirty method, to rework if possible</remarks>
     /// <returns>Container of the new inventory</returns>
-    public async Task<Container> waitForInventory(string name, int delay = 50, int maxTries = 3) {
+    protected async Task<Container> waitForInventory(string name, int delay = 50, int maxTries = 3) {
         int tries = 0;
         while (tries < maxTries) {
             int newId = await waitForInventoryId(delay);
@@ -3457,12 +3432,24 @@ class MineplexBot : ChatBot {
         return null;
     }
 
-
     /// <summary>
+    /// Closes all open inventories
+    /// </summary>
+    protected void closeAllInventories() {
+        foreach (int invId in GetInventories().Keys) {
+            CloseInventory(invId);
+        }
+        PrintChat("Closed all inventories");
+    }
+    
+
+    // ===== INVENTORY CLICKS FUNCTIONS =====
+
+     /// <summary>
     /// Clicks an item with a specific name inside a given inventory
     /// </summary>
     /// <remarks>Can specify the type of click and if the inventory needs to be closed after (by default LeftClick and yes)</remarks>
-    private void clickInventory(
+    protected void clickInventory(
         Container container, string itemName,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true) {
 
@@ -3476,7 +3463,7 @@ class MineplexBot : ChatBot {
     /// Clicks an item at a given index inside a given inventory
     /// </summary>
     /// <remarks>Can specify the type of click and if the inventory needs to be closed after (by default LeftClick and yes)</remarks>
-    private void clickInventory(
+    protected void clickInventory(
         Container container, int itemIndex,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true
     ) {
@@ -3495,7 +3482,7 @@ class MineplexBot : ChatBot {
     /// </summary>
     /// <remarks>Can specify the type of click and if the inventory needs to be closed after (by default LeftClick and yes)</remarks>
     /// <returns>Container of the new inventory</returns>
-    private async Task<Container> clickInventoryContainer(
+    protected async Task<Container> clickInventoryContainer(
         Container container, string itemName, string containerName,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true
     ) {
@@ -3511,7 +3498,7 @@ class MineplexBot : ChatBot {
     /// </summary>
     /// <remarks>Can specify the type of click and if the inventory needs to be closed after (by default LeftClick and yes)</remarks>
     /// <returns>Container of the new inventory</returns>
-    private async Task<Container> clickInventoryContainer(
+    protected async Task<Container> clickInventoryContainer(
         Container container, int itemIndex, string containerName,
         WindowActionType actionType = WindowActionType.LeftClick, bool close = true
     ) {
@@ -3519,24 +3506,15 @@ class MineplexBot : ChatBot {
         return await waitForInventory(containerName);
     }
 
-    /// <summary>
-    /// Prints nicely all items inside a container
-    /// </summary>
-    private void listItemNames(Container container) {
-        LogToConsole("Here's a list of all items in your container:");
-        foreach ((int index, Item item) in container.Items) {
-            LogToConsole(
-                index + ": " + GetVerbatim(item.DisplayName) + " (" + item.Type.ToString() + ")"
-            );
-        }
-    }
 
+    // ===== GET CAPITALIZED ITEMNAMES =====
+    
     /// <summary>
     /// Returns the name of an item inside a provided container but
     /// with its capitalization from the container
     /// Not really needed but looks a bit nicer
     /// </summary>
-    private string getCapitalizedItemName(Container container, string name) {
+    protected string getCapitalizedItemName(Container container, string name) {
         foreach ((int _, Item item) in container.Items) {
             string itemName = GetVerbatim(item.DisplayName);
 
@@ -3551,21 +3529,87 @@ class MineplexBot : ChatBot {
     /// inside a provided container
     /// Not really needed but looks a bit nicer
     /// </summary>
-    private string getCapitalizedItemName(Container container, int index) {
+    protected string getCapitalizedItemName(Container container, int index) {
         if (!container.Items.ContainsKey(index)) {
             return "NONE";
         }
         return GetVerbatim(container.Items[index].DisplayName);
     }
 
+
+    // ===== FANCY PRINT FUNCTIONS =====
+
+    /// <summary>
+    /// Prints nicely all items inside a container
+    /// </summary>
+    protected void listItemNames(Container container) {
+        LogToConsole("Here's a list of all items in your container:");
+        foreach ((int index, Item item) in container.Items) {
+            LogToConsole(
+                index + ": " + GetVerbatim(item.DisplayName) + " (" + item.Type.ToString() + ")"
+            );
+        }
+    }
+
     /// <summary>
     /// Prints nicely all containers open
     /// </summary>
-    private void listContainers() {
+    protected void listContainers() {
         LogToConsole("Here's a list of all containers currently open:");
         foreach ((int index, Container container) in GetInventories()) {
             LogToConsole(index + ": " + GetVerbatim(container.Title));
         }
+    }
+
+
+    // ===== CONTAINER SEARCH UTILS =====
+
+    /// <summary>
+    /// Checks if an item is at a specified index with a specified index in a Container
+    /// </summary>
+    protected bool hasItemAtIndex(Container container, int index, string name) {
+        return container.Items.ContainsKey(index) &&
+                MatchesNoCap(
+                    container.Items[index].DisplayName,
+                    name
+                );
+    }
+
+
+    // ===== END =====
+    // Note: could add searchItemContainerMultiPage(... here)
+    // as it could be useful for other servers
+}
+
+class MineplexBot : ChatBotPlus {
+    public override void Initialize() {
+        // Note: may try to say "Done loading!" while in spawn,
+        // altho since you can't talk in it without moving it doesn't matter
+        JoinServer();
+        PrintChat("Done loading !");
+        if (!GetInventoryEnabled()) {
+            LogToConsole("§4InventoryHandle disabled ! Can't interract w containers !");
+        }
+    }
+
+    public async override void AfterGameJoined() {
+        JoinServer();
+        await Task.Delay(500); // just in case server lags (which happens often)
+        JoinServer();
+    }
+
+    private void reloadBot() {
+        closeAllInventories();
+        PrintChat("Reloading bot");
+        PerformInternalCommand("script ./MineplexBot.cs");
+        UnloadBot();
+    }
+
+    /// <summary>
+    /// Joins the private server
+    /// </summary>
+    public void JoinServer() {
+        SendText("/sv " + this.SERVER_NAME);
     }
 
     /// <summary>
@@ -3609,15 +3653,6 @@ class MineplexBot : ChatBot {
             SendText("/whitelist " + String.Join(" ", players.ToArray()));
     }
 
-    /// <summary>
-    /// Closes all open inventories
-    /// </summary>
-    private void closeAll() {
-        foreach (int invId in GetInventories().Keys) {
-            CloseInventory(invId);
-        }
-        PrintChat("Closed all inventories");
-    }
 
     /// <summary>
     /// Sets the map inventory index for the current game
@@ -3644,17 +3679,6 @@ class MineplexBot : ChatBot {
         }
     }
 
-
-    /// <summary>
-    /// Checks if an item is at a specified index with a specified index in a Container
-    /// </summary>
-    private bool hasItemAtIndex(Container container, int index, string name) {
-        return container.Items.ContainsKey(index) &&
-                MatchesNoCap(
-                    container.Items[index].DisplayName,
-                    name
-                );
-    }
 
     /// <summary>
     /// hasItemAtIndex(...) but for the next button specifically
@@ -3744,6 +3768,7 @@ class MineplexBot : ChatBot {
     /// Searches for a specified item inside a specified Container
     /// Works with multi-page menus
     /// </summary>
+    /// <remarks>May be moved to the "ChatBotPlus" class</remarks>
     /// <returns>A tuple with the open Container containing the item and the item's index</returns>
     private async Task<(Container, int)> searchItemContainerMultiPage(Container container, string itemName) {
         foreach ((int index, Item item) in container.Items) {
@@ -3875,7 +3900,8 @@ class MineplexBot : ChatBot {
 
     // ========== VARS HERE ==========
     // name of the private server to join
-    private string SERVER_NAME = "COM-BridgesForever-1";
+    // private string SERVER_NAME = "COM-BridgesForever-1";
+    private string SERVER_NAME = "dxrrymxxnkid-1";
     // String to match for if we receive a DM
     private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no
@@ -3971,7 +3997,7 @@ class MineplexBot : ChatBot {
 
             case "caa":
             case "closeall":
-                closeAll();
+                closeAllInventories();
                 break;
 
             case "start":
@@ -4094,7 +4120,7 @@ class MineplexBot : ChatBot {
             LogToConsole(e.StackTrace);
             LogToConsole("§4====================");
 
-            closeAll();
+            closeAllInventories();
             this.isCommandRunning = false;
         }
     }

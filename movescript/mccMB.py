@@ -158,7 +158,7 @@ def move_zip(zipname: str, map: Map) -> bool:
 if __name__ == "__main__":
     map = Map("/home/nix/mcc/a4y/client/CSVs/info.txt")
 
-    print_info(map)
+    # print_info(map)
 
     # Process the files
     zipname = process_zips(map)
@@ -169,10 +169,10 @@ if __name__ == "__main__":
         move_success = move_zip(zipname, map)
 
     if move_success:
-        print(bcolors.OKGREEN + bcolors.UNDERLINE + "Move success: True" + bcolors.ENDC)
+        print(f"--> {map.game}\n--> {map.name}\n" + bcolors.OKGREEN + bcolors.UNDERLINE + "- Move success: True" + bcolors.ENDC)
     else:
         if zipname:
-            print(bcolors.FAIL + bcolors.UNDERLINE + "Move success: False" + bcolors.ENDC)
+            print(f"--> {map.game}\n--> {map.name}\n" + bcolors.FAIL + bcolors.UNDERLINE + "- Move success: False" + bcolors.ENDC)
         else:
-            print(bcolors.WARNING + bcolors.UNDERLINE + "No files found" + bcolors.ENDC)
+            print(f"--> {map.game}\n--> {map.name}\n" + bcolors.WARNING + bcolors.UNDERLINE + "- No files found" +  bcolors.ENDC)
 

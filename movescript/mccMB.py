@@ -176,10 +176,10 @@ if __name__ == "__main__":
         move_success = move_zip(zipname, map)
 
     if move_success:
-        print(f"--> {map.game}\n--> {map.name}\n" + bcolors.OKGREEN + bcolors.UNDERLINE + "- Move success: True" + bcolors.ENDC)
+        print(f"--> {map.game}\n--> {bcolors.UNDERLINE}{map.name}{bcolors.ENDC}\n{bcolors.OKGREEN}> Move success: True{bcolors.ENDC}")
     else:
         if zipname:
-            print(f"--> {map.game}\n--> {map.name}\n" + bcolors.FAIL + bcolors.UNDERLINE + "- Move success: False" + bcolors.ENDC)
+            print(f"--> {map.game}\n--> {bcolors.UNDERLINE}{map.name}{bcolors.ENDC}\n{bcolors.FAIL}> Move success: False{bcolors.ENDC}")
         else:
-            print(f"--> {map.game}\n--> {map.name}\n" + bcolors.WARNING + bcolors.UNDERLINE + "- No files found" +  bcolors.ENDC)
+            print(f"--> {map.game}\n--> {bcolors.UNDERLINE}{map.name}{bcolors.ENDC}\n{bcolors.WARNING}> No files found{bcolors.ENDC}")
 

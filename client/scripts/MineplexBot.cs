@@ -29,6 +29,7 @@ class MineplexBot : ChatBot {
     }
 
     private void reloadBot() {
+        closeAll();
         PrintChat("Reloading bot");
         PerformInternalCommand("script ./MineplexBot.cs");
         UnloadBot();
@@ -514,15 +515,15 @@ class MineplexBot : ChatBot {
     /// <summary>
     /// Lets you choose a map
     /// </summary>
-    private async Task chooseMap(List<string> args) {
+    private async Task<bool> chooseMap(List<string> args) {
         if (args.Count == 0) {
             PrintChat("No map specified !");
-            return;
+            return false;
         }
 
         if (this.currentGame == "") {
             PrintChat("No game specified !");
-            return;
+            return false;
         }
 
         string mapName = String.Join(" ", args.ToArray()).ToLower();
@@ -534,11 +535,13 @@ class MineplexBot : ChatBot {
 
         mapName = getCapitalizedItemName(mapsRightPage, mapItemindex);
 
-        if (mapsRightPage == null || mapItemindex == 0)
+        if (mapsRightPage == null || mapItemindex == 0) {
             PrintChat("Specified map invalid (" + mapName + ") for game " + this.currentGame);
-        else {
+            return false;
+        } else {
             clickInventory(mapsRightPage, mapItemindex);
             PrintChat("Selected map " + mapName + " for game " + this.currentGame);
+            return true;
         }
     }
 
@@ -576,7 +579,7 @@ class MineplexBot : ChatBot {
     private async Task runCommand(string cmd, List<string> args) {
         LogToConsole("§6Received command: " + cmd);
 
-        if (this.isCommandRunning) {
+        if (this.isCommandRunning && cmd != "rl" && cmd != "reload") {
             PrintChat("Command currently running, please wait");
             return;
         }
@@ -593,12 +596,13 @@ class MineplexBot : ChatBot {
                 break;
 
             case "map":
-                await chooseMap(args);
-                await startGame(null);
+                if (await chooseMap(args))
+                    await startGame(null);
                 break;
-            
+
             case "mapns":
             case "mapn":
+            case "maps":
                 await chooseMap(args);
                 break;
 
@@ -727,10 +731,9 @@ class MineplexBot : ChatBot {
 
 
         grabCommand(items, count);
-
     }
 
-    private async void grabCommand(JArray items, int count) {
+    private void grabCommand(JArray items, int count) {
         string username = items[count - 2]["text"].ToString();
 
         if (!this.TRUSTED_PLAYERS.Contains(username.ToLower()))
@@ -741,9 +744,17 @@ class MineplexBot : ChatBot {
         string command = args.First();
         args.RemoveAt(0);
 
+        handleRunCommandError(command, args);
+    }
+    private async Task handleRunCommandError(String command, List<string> args, int _try = 0) {
         try {
             await runCommand(command, args);
         } catch (Exception e) {
+            if (_try < 3) {
+                PrintChat("Command had an exception, retrying (try " + (_try + 1) + "/3)");
+                await handleRunCommandError(command, args, _try: _try + 1);
+                return;
+            }
             // Chat
             PrintChat("Something went wrong! See console for full stack trace");
             string errstr = "Error '" + e.Message + "' @ '" + e.TargetSite + "'";

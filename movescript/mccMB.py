@@ -42,8 +42,9 @@ class Map:
     builder: str
 
     folderPath: str
+    fullFolderPath: str
     filePath: str
-    fullPath: str
+    fullFilePath: str
 
     def __init__(self, infoFilePath: str):
         with open(infoFilePath, "r") as openFile:
@@ -63,8 +64,9 @@ class Map:
             self.builder = infos[2]
         
         self.folderPath = self._getFolderPath()
-        self.filePath = self._getSubPath()
-        self.fullPath = self._getFullSavePath()
+        self.fullFolderPath = self._getFullFolderPath()
+        self.filePath = self._getFilePath()
+        self.fullFilePath = self._getFullFilePath()
     
     def _getFolderPath(self) -> str:
         path = ""
@@ -75,10 +77,13 @@ class Map:
         path += self.game + "/"
         return path
 
-    def _getSubPath(self) -> str:
+    def _getFullFolderPath(self) -> str:
+        return GAME_PATH + self.folderPath
+
+    def _getFilePath(self) -> str:
         return self.folderPath + self.name + ".zip"
 
-    def _getFullSavePath(self) -> str:
+    def _getFullFilePath(self) -> str:
         return GAME_PATH + self.filePath
 
 
@@ -125,13 +130,13 @@ def print_info(map: Map) -> None:
 def move_zip(zipname: str, map: Map) -> bool:
     # adapt path if nano game
 
-    if not os.path.isdir(map.folderPath):
+    if not os.path.isdir(map.fullFolderPath):
         print("Made directory !")
-        os.makedirs(map.folderPath)
+        os.makedirs(map.fullFolderPath)
 
     try:
         # check if file already present
-        for elem in os.listdir(map.folderPath):
+        for elem in os.listdir(map.fullFolderPath):
             if elem == map.name + ".zip":
                 print("Map already downloaded")
                 # if already is, move to the "Newer" dict (+add game & nano game name in filename)
@@ -146,7 +151,7 @@ def move_zip(zipname: str, map: Map) -> bool:
                 return False
 
         # if not copy it
-        shutil.copyfile(zipname, map.fullPath)
+        shutil.copyfile(zipname, map.fullFilePath)
         # print("File moved successfully")
         # then delete it
         os.remove(zipname)

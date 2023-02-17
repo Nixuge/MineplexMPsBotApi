@@ -387,6 +387,7 @@ class MineplexBot : ChatBotPlus {
         await Task.Delay(this.NEXT_INVENTORY_DELAY);
     }
 
+
     /// <summary>
     /// Selects a map from the current game using the current index & page. 
     /// incrementSlot makes it so that if yes it goes to the next map before selecting it
@@ -447,6 +448,7 @@ class MineplexBot : ChatBotPlus {
             startGame(null);
             PrintChat("Successfully started game");
         }
+        RetryManagement.saveData(this.currentGame, this.currentSlot, this.currentPage, this.savedMapCount);
     }
 
     /// <summary>
@@ -506,6 +508,7 @@ class MineplexBot : ChatBotPlus {
             clickInventory(container, index);
             CloseInventory(container.ID);
             PrintChat("Successfully set game to " + this.currentGame);
+            RetryManagement.saveData(this.currentGame, this.currentSlot, this.currentPage, this.savedMapCount);
         }
     }
 
@@ -787,6 +790,7 @@ class MineplexBot : ChatBotPlus {
         handleRunCommandError(command, args);
     }
     private async Task handleRunCommandError(String command, List<string> args, int _try = 0) {
+        //TODO: ensure async try catch works
         try {
             await runCommand(command, args);
         } catch (Exception e) {
@@ -866,7 +870,7 @@ class CSVManagement {
     private string game;
     private bool isNano;
 
-    private static string standalonePath = "CSVs/info.txt";
+    private static string standalonePath = ".data/info.txt";
     private string csvPath;
     
     private string csvLine;

@@ -14,10 +14,7 @@ import time
 # only turn on if in nano games
 MOVE_ZIP_AUTOMATICALLY = True
 
-# TO CHANGE WHEN SWITCHING GAME TO SAVE
 GAME_PATH = f"/home/nix/Mineplex Backup/"
-# if NANO_GAMES:
-# GAME_PATH += "Nano Games/"
 
 SAVES = "/home/nix/.local/share/multimc/instances/1.8.9 pvp - worlddl/.minecraft/saves/"
 
@@ -163,7 +160,7 @@ def move_zip(zipname: str, map: Map) -> bool:
 
 
 if __name__ == "__main__":
-    map = Map("/home/nix/mcc/a4y/client/CSVs/info.txt")
+    map = Map("/home/nix/mcc/a4y/client/.data/info.txt")
 
     # print_info(map)
 

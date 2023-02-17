@@ -3590,6 +3590,16 @@ class MineplexBot : ChatBotPlus {
         PrintChat("Done loading !");
         if (!GetInventoryEnabled()) {
             LogToConsole("§4InventoryHandle disabled ! Can't interract w containers !");
+            UnloadBot();
+        }
+        RetryManagement retrier = new RetryManagement();
+        if (retrier.hasContent()) {
+            PrintChat("Recovered data from pre-reload");
+            this.currentGame = retrier.getGame();
+            this.currentSlot = retrier.getSlot();
+            this.currentPage = retrier.getPage();
+            this.savedMapCount = retrier.getSavedMapCount();
+            RetryManagement.eraseFile();
         }
     }
 
@@ -3599,7 +3609,9 @@ class MineplexBot : ChatBotPlus {
         JoinServer();
     }
 
-    private void reloadBot() {
+    private void reloadBot(List<string> args) {
+        if (args == null || args.Count == 0)
+            RetryManagement.saveData(this.currentGame, this.currentSlot, this.currentPage, this.savedMapCount);
         closeAllInventories();
         PrintChat("Reloading bot");
         PerformInternalCommand("script ./MineplexBot.cs");
@@ -3724,14 +3736,14 @@ class MineplexBot : ChatBotPlus {
             }
         }
 
-        // start only
-        if (this.currentSlot == 9 && !incrementSlot) {
-            this.currentSlot++;
+        // start only, if slot is 0 make it so that it starts at 10
+        if (this.currentSlot == 0) {
+            this.currentSlot = incrementSlot ? 9 : 10;
         }
 
         if (incrementSlot) {
             this.currentSlot++;
-            this.savedGameMaps++;
+            this.savedMapCount++;
 
             if (this.EDGE_SLOTS.Contains(currentSlot)) {
                 this.currentSlot += 2;
@@ -3746,7 +3758,7 @@ class MineplexBot : ChatBotPlus {
                     await clickNextButton(maps);
                     // else stop
                 } else {
-                    PrintChat("No more maps ! (" + this.savedGameMaps + " saved)");
+                    PrintChat("No more maps ! (" + this.savedMapCount + " saved)");
                     return;
                 }
             }
@@ -3918,12 +3930,13 @@ class MineplexBot : ChatBotPlus {
     // inventory after clicking on the next page button in map selector
     private int NEXT_INVENTORY_DELAY = 500;
     // current map slot index
-    private int currentSlot = 9;
+    private int currentSlot = 0;
     // current page 
     private int currentPage = 0;
     // current game
     private string currentGame = "";
-    private int savedGameMaps = 0;
+    // number of saved maps
+    private int savedMapCount = 0;
 
     // is a command running
     private bool isCommandRunning = false;
@@ -4011,7 +4024,7 @@ class MineplexBot : ChatBotPlus {
 
             case "rl":
             case "reload":
-                reloadBot();
+                reloadBot(args);
                 break;
 
             case "setopts":
@@ -4102,11 +4115,13 @@ class MineplexBot : ChatBotPlus {
         handleRunCommandError(command, args);
     }
     private async Task handleRunCommandError(String command, List<string> args, int _try = 0) {
+        //TODO: ensure async try catch works
         try {
             await runCommand(command, args);
         } catch (Exception e) {
             if (_try < 3) {
                 PrintChat("Command had an exception, retrying (try " + (_try + 1) + "/3)");
+                this.isCommandRunning = false;
                 await handleRunCommandError(command, args, _try: _try + 1);
                 return;
             }
@@ -4133,15 +4148,56 @@ class MineplexBot : ChatBotPlus {
     }
 }
 
-// Finally another class
+
+// No docs for this one as it's pretty straight forward & lazy
+class RetryManagement {
+    private static string filePath = ".data/reload.txt";
+    public static void saveData(string game, int slot, int page, int savedMapCount) {
+        if (game == "") {
+            eraseFile();
+            return;
+        }
+        File.WriteAllText(filePath, game + "\t" + slot + "\t" + page + "\t" + savedMapCount);
+    }
+    public static void eraseFile() {
+        File.WriteAllText(filePath, "");
+    }
+
+    private string[] data;
+    public RetryManagement() {
+        string fileContent = File.ReadAllText(filePath);
+        this.data = fileContent.Split("\t");
+    }
+
+    public bool hasContent() {
+        return (this.data.Length == 4);
+    }
+
+    public string getGame() {
+        return this.data[0];
+    }
+    public int getSlot() {
+        return int.Parse(this.data[1]);
+    }
+    public int getPage() {
+        return int.Parse(this.data[2]);
+    }
+    public int getSavedMapCount() {
+        return int.Parse(this.data[3]);
+    }
+}
+
+
+// No docs for this one either because same reason
 class CSVManagement {
     private string map;
     private string author;
     private string game;
     private bool isNano;
 
+    private static string standalonePath = "CSVs/info.txt";
     private string csvPath;
-    private string standalonePath = "CSVs/info.txt";
+    
     private string csvLine;
 
     public CSVManagement(string map, string author, string game, bool isNano) {
@@ -4154,7 +4210,7 @@ class CSVManagement {
     }
 
     private void updateDataTxt() {
-        File.WriteAllTextAsync(this.standalonePath, this.game + "\t" + this.csvLine);
+        File.WriteAllTextAsync(standalonePath, this.game + "\t" + this.csvLine);
     }
 
     private string genLine() {

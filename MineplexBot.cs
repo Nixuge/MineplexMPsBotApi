@@ -3594,13 +3594,18 @@ class MineplexBot : ChatBotPlus {
         }
         RetryManagement retrier = new RetryManagement();
         if (retrier.hasContent()) {
-            PrintChat("Recovered data from pre-reload");
             this.currentGame = retrier.getGame();
+            this.currentMapName = retrier.getMapName();
             this.currentSlot = retrier.getSlot();
             this.currentPage = retrier.getPage();
             this.savedMapCount = retrier.getSavedMapCount();
+            printCurrentData(prefix:"Recovered data");
             RetryManagement.eraseFile();
         }
+    }
+
+    public void printCurrentData(string prefix = "Current data") {
+        PrintChat(prefix + ": map \"" + this.currentMapName  + "\" for game \"" + this.currentGame  + "\" | slot " + this.currentSlot + "p" + this.currentPage );
     }
 
     public async override void AfterGameJoined() {
@@ -3611,7 +3616,7 @@ class MineplexBot : ChatBotPlus {
 
     private void reloadBot(List<string> args) {
         if (args == null || args.Count == 0)
-            RetryManagement.saveData(this.currentGame, this.currentSlot, this.currentPage, this.savedMapCount);
+            RetryManagement.saveData(this.currentGame, this.currentMapName, this.currentSlot, this.currentPage, this.savedMapCount);
         closeAllInventories();
         PrintChat("Reloading bot");
         PerformInternalCommand("script ./MineplexBot.cs");
@@ -3771,12 +3776,13 @@ class MineplexBot : ChatBotPlus {
         clickInventory(maps, currentSlot);
 
         PrintChat("Successfully set map to \"" + mapName + "\" (slot " + currentSlot + ")");
+        this.currentMapName = mapName;
 
         if (args.Count == 0) {
             startGame(null);
             PrintChat("Successfully started game");
         }
-        RetryManagement.saveData(this.currentGame, this.currentSlot, this.currentPage, this.savedMapCount);
+        RetryManagement.saveData(this.currentGame, this.currentMapName, this.currentSlot, this.currentPage, this.savedMapCount);
     }
 
     /// <summary>
@@ -3836,7 +3842,7 @@ class MineplexBot : ChatBotPlus {
             clickInventory(container, index);
             CloseInventory(container.ID);
             PrintChat("Successfully set game to " + this.currentGame);
-            RetryManagement.saveData(this.currentGame, this.currentSlot, this.currentPage, this.savedMapCount);
+            RetryManagement.saveData(this.currentGame, this.currentMapName, this.currentSlot, this.currentPage, this.savedMapCount);
         }
     }
 
@@ -3932,6 +3938,8 @@ class MineplexBot : ChatBotPlus {
     private int FIRST_SLOT = 10;
     // inventory after clicking on the next page button in map selector
     private int NEXT_INVENTORY_DELAY = 500;
+    // current map name
+    private string currentMapName = "";
     // current map slot index
     private int currentSlot = 0;
     // current page 
@@ -3987,7 +3995,13 @@ class MineplexBot : ChatBotPlus {
                 LogToConsole("Unloading bot");
                 UnloadBot();
                 break;
+            
+            case "pd":
+            case "printdata":
+                printCurrentData();
+                break;
 
+            case "rd":
             case "red":
             case "redo":
                 await clickOnMap(false, args);
@@ -4155,12 +4169,12 @@ class MineplexBot : ChatBotPlus {
 // No docs for this one as it's pretty straight forward & lazy
 class RetryManagement {
     private static string filePath = ".data/reload.txt";
-    public static void saveData(string game, int slot, int page, int savedMapCount) {
+    public static void saveData(string game, string mapName, int slot, int page, int savedMapCount) {
         if (game == "") {
             eraseFile();
             return;
         }
-        File.WriteAllText(filePath, game + "\t" + slot + "\t" + page + "\t" + savedMapCount);
+        File.WriteAllText(filePath, game + "\t" + mapName + "\t" + slot + "\t" + page + "\t" + savedMapCount);
     }
     public static void eraseFile() {
         File.WriteAllText(filePath, "");
@@ -4173,20 +4187,23 @@ class RetryManagement {
     }
 
     public bool hasContent() {
-        return (this.data.Length == 4);
+        return (this.data.Length == 5);
     }
 
     public string getGame() {
         return this.data[0];
     }
-    public int getSlot() {
-        return int.Parse(this.data[1]);
+    public string getMapName() {
+        return this.data[1];
     }
-    public int getPage() {
+    public int getSlot() {
         return int.Parse(this.data[2]);
     }
-    public int getSavedMapCount() {
+    public int getPage() {
         return int.Parse(this.data[3]);
+    }
+    public int getSavedMapCount() {
+        return int.Parse(this.data[4]);
     }
 }
 
@@ -4226,8 +4243,8 @@ class CSVManagement {
     private string genHeader() {
         string full = "";
         if (this.isNano)
-            full += "minigame\t";
-        full += "name\tbuilder\tcommentaries";
+            full += "Minigame\t";
+        full += "Name\tBuilder\tCommentaries";
         return full;
     }
 

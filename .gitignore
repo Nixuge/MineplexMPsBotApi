@@ -3,4 +3,5 @@ ProfileKeyCache.ini
 MinecraftClient
 MinecraftClient.backup.ini
 info.txt
+reload.txt
 *.csv

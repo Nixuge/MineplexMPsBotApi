@@ -104,6 +104,17 @@ class ChatBotPlus : ChatBot {
         return null;
     }
 
+
+
+    /// <summary>
+    /// Closes an open inventory
+    /// </summary>
+    /// <param name="inventory">inventory to close</param>
+    /// <returns>True if success</returns>
+    protected bool CloseInventory(Container inventory) {
+        return CloseInventory(inventory.ID);
+    }
+    
     /// <summary>
     /// Closes all open inventories
     /// </summary>
@@ -519,7 +530,7 @@ class MineplexBot : ChatBotPlus {
             this.currentGame = getCapitalizedItemName(container, gameName);
             this.currentPage = 0;
             clickInventory(container, index);
-            CloseInventory(container.ID);
+            CloseInventory(container);
             PrintChat("Successfully set game to " + this.currentGame);
             RetryManagement.saveData(this.currentGame, this.currentMapName, this.currentSlot, this.currentPage, this.savedMapCount);
         }
@@ -529,7 +540,7 @@ class MineplexBot : ChatBotPlus {
     /// Counts how many maps a game has
     /// </summary>
     private async Task countMapsGame(List<string> args) {
-        if (args.Count == 0 && this.currentGame = "") {
+        if ((args.Count == 0) && (this.currentGame == "")) {
             PrintChat("No game specified !");
             return;
         }
@@ -547,7 +558,7 @@ class MineplexBot : ChatBotPlus {
         Container mapChooseContainer = await clickInventoryContainer(container, index, "set map", WindowActionType.RightClick);
 
         (int mapCount, int pageCount) = await recurCountMapsGame(mapChooseContainer, 0, 1);
-        CloseInventory(mapChooseContainer.ID);
+        CloseInventory(mapChooseContainer);
 
         string page = pageCount == 1 ? " page." : " pages.";
 
@@ -603,7 +614,7 @@ class MineplexBot : ChatBotPlus {
                 changed = true;
             }
         }
-        CloseInventory(settings.ID);
+        CloseInventory(settings);
         if (changed)
             PrintChat("Done changing all settings");
         else

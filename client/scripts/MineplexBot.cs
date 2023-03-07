@@ -543,11 +543,10 @@ class MineplexBot : ChatBotPlus {
         }
 
         Container mapChooseContainer = await clickInventoryContainer(container, index, "set map", WindowActionType.RightClick);
-        gameName = getCapitalizedItemName(container, gameName);
 
         (int mapCount, int pageCount) = await recurCountMapsGame(mapChooseContainer, 0, 1);
 
-        PrintChat("Game " + gameName + " has " + mapCount + " maps spread across " + mapCount + " maps.");
+        PrintChat("Game " + gameName + " has " + mapCount + " maps spread across " + pageCount + " pages.");
 
     }
     private async Task<(int, int)> recurCountMapsGame(Container container, int initialCount, int initialPage) {

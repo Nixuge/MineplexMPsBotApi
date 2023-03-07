@@ -442,6 +442,7 @@ class MineplexBot : ChatBotPlus {
                     await clickNextButton(maps);
                     // else stop
                 } else {
+                    CloseInventory(maps);
                     PrintChat("No more maps ! (" + this.savedMapCount + " saved)");
                     return;
                 }
@@ -545,8 +546,11 @@ class MineplexBot : ChatBotPlus {
         Container mapChooseContainer = await clickInventoryContainer(container, index, "set map", WindowActionType.RightClick);
 
         (int mapCount, int pageCount) = await recurCountMapsGame(mapChooseContainer, 0, 1);
+        CloseInventory(mapChooseContainer.ID);
 
-        PrintChat("Game " + gameName + " has " + mapCount + " maps spread across " + pageCount + " pages.");
+        String page = pageCount == 1 ? " page." : " pages.";
+
+        PrintChat("Game \"" + gameName + "\" has " + mapCount + " maps spread across " + pageCount + page);
 
     }
     private async Task<(int, int)> recurCountMapsGame(Container container, int initialCount, int initialPage) {

@@ -327,7 +327,7 @@ class MineplexBot : ChatBotPlus {
             "Give Co-Host",
             "Give Co-Host"
         );
-        foreach (String player in this.TRUSTED_PLAYERS) {
+        foreach (string player in this.TRUSTED_PLAYERS) {
             clickInventory(coOwnContainer, player);
         }
         PrintChat("Done setting all trusted players to co owners !");
@@ -529,12 +529,13 @@ class MineplexBot : ChatBotPlus {
     /// Counts how many maps a game has
     /// </summary>
     private async Task countMapsGame(List<string> args) {
-        if (args.Count == 0) {
+        if (args.Count == 0 && this.currentGame = "") {
             PrintChat("No game specified !");
             return;
         }
+        string gameName = (args.Count == 0) ?
+            this.currentGame : String.Join(" ", args.ToArray()).ToLower();
 
-        string gameName = String.Join(" ", args.ToArray()).ToLower();
 
         (Container container, int index) = await searchGamePage(null, gameName);
 
@@ -548,7 +549,7 @@ class MineplexBot : ChatBotPlus {
         (int mapCount, int pageCount) = await recurCountMapsGame(mapChooseContainer, 0, 1);
         CloseInventory(mapChooseContainer.ID);
 
-        String page = pageCount == 1 ? " page." : " pages.";
+        string page = pageCount == 1 ? " page." : " pages.";
 
         PrintChat("Game \"" + gameName + "\" has " + mapCount + " maps spread across " + pageCount + page);
 
@@ -859,7 +860,7 @@ class MineplexBot : ChatBotPlus {
 
         handleRunCommandError(command, args);
     }
-    private async Task handleRunCommandError(String command, List<string> args, int _try = 0) {
+    private async Task handleRunCommandError(string command, List<string> args, int _try = 0) {
         //TODO: ensure async try catch works
         try {
             await runCommand(command, args);

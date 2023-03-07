@@ -3667,11 +3667,15 @@ class MineplexBot : ChatBotPlus {
     /// </summary>
     /// <remarks>If none specified, toggles all players in TRUSTED_PLAYERS</remarks>
     private void addToWhitelist(List<string> players) {
-        //note: nasty bug w that one since "dxrrymxxnkid" is in another color 
-        if (players.Count == 0)
+        if (players.Count == 0) {
             SendText("/whitelist " + String.Join(" ", this.TRUSTED_PLAYERS));
-        else
+            PrintChat("Done toggling trusted players from the whitelist");
+        } else {
+            // note: nasty bug w that one if one of the player is the player running the cmd
+            // as the username will be gray and fuck up parsing (unneeded; won't fix for now) 
             SendText("/whitelist " + String.Join(" ", players.ToArray()));
+            PrintChat("Done toggling " + String.Join(", ", players.ToArray()) + " from the whitelist");
+        }
     }
 
 

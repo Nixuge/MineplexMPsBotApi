@@ -114,7 +114,7 @@ class ChatBotPlus : ChatBot {
     protected bool CloseInventory(Container inventory) {
         return CloseInventory(inventory.ID);
     }
-    
+
     /// <summary>
     /// Closes all open inventories
     /// </summary>
@@ -288,7 +288,7 @@ class MineplexBot : ChatBotPlus {
     }
 
     public void printCurrentData(string prefix = "Current data") {
-        PrintChat(prefix + ": map \"" + this.currentMapName + "\" for game \"" + this.currentGame + "\" | slot " + this.currentSlot + "p" + this.currentPage);
+        PrintChat(prefix + ": map \"" + this.currentMapName + "\" for game \"" + this.currentGame + "\" (slot " + this.currentSlot + "p" + this.currentPage + ")");
     }
 
     public async override void AfterGameJoined() {
@@ -454,6 +454,7 @@ class MineplexBot : ChatBotPlus {
                     // else stop
                 } else {
                     CloseInventory(maps);
+                    this.savedMapCount--; // cancel the add from right before
                     PrintChat("No more maps ! (" + this.savedMapCount + " saved)");
                     return;
                 }
@@ -489,9 +490,11 @@ class MineplexBot : ChatBotPlus {
 
         if (hasNextButton(container)) {
             await clickNextButton(container);
-            return await searchGamePage(container, itemName);
+            return await searchItemContainerMultiPage(container, itemName);
         }
 
+        if (container != null)
+            CloseInventory(container);
         return (null, 0);
     }
 
@@ -526,9 +529,14 @@ class MineplexBot : ChatBotPlus {
 
         if (container == null || index == 0) {
             PrintChat("Specified game invalid (" + gameName + ")");
+            if (container != null)
+                CloseInventory(container);
         } else {
             this.currentGame = getCapitalizedItemName(container, gameName);
             this.currentPage = 0;
+            this.currentSlot = 0;
+            this.savedMapCount = 0;
+            this.currentMapName = "Unspecified";
             clickInventory(container, index);
             CloseInventory(container);
             PrintChat("Successfully set game to " + this.currentGame);
@@ -566,9 +574,8 @@ class MineplexBot : ChatBotPlus {
 
     }
     private async Task<(int, int)> recurCountMapsGame(Container container, int initialCount, int initialPage) {
-        foreach ((int _, Item item) in container.Items)
-        {
-            if (item.Type == ItemType.Paper) 
+        foreach ((int _, Item item) in container.Items) {
+            if (item.Type == ItemType.Paper)
                 initialCount++;
         }
         if (hasNextButton(container)) {
@@ -759,7 +766,7 @@ class MineplexBot : ChatBotPlus {
             case "co-own":
                 await giveCoOwn(args);
                 break;
-            
+
             case "count":
             case "countm":
             case "countmaps":
@@ -853,7 +860,11 @@ class MineplexBot : ChatBotPlus {
 
         if (items[0]["text"].ToString() == "Map - ")
             grabMapAuthor(items);
-
+        
+        if (!items[count - 2].ToString().Contains("\"text\":"))
+            return;
+        if (!items[count - 1].ToString().Contains("\"extra\":"))
+            return;
 
         grabCommand(items, count);
     }

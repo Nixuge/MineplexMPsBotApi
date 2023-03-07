@@ -327,8 +327,11 @@ class MineplexBot : ChatBotPlus {
             "Give Co-Host",
             "Give Co-Host"
         );
-        listItemNames(coOwnContainer);
-        PrintChat("Not implemented yet !");
+        foreach (String player in this.TRUSTED_PLAYERS)
+        {
+            clickInventory(coOwnContainer, player);
+        }
+        PrintChat("Done setting all trusted players to co owners !");
     }
 
     /// <summary>

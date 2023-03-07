@@ -165,7 +165,7 @@ def move_zip(zipname: str, map: Map) -> bool:
 
 
 if __name__ == "__main__":
-    map = Map("/home/nix/mcc/a4y/client/.data/info.txt")
+    map = Map("../client/.data/info.txt")
 
     # print_info(map)
 

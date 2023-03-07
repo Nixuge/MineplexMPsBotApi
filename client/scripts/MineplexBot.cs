@@ -113,11 +113,11 @@ class ChatBotPlus : ChatBot {
         }
         PrintChat("Closed all inventories");
     }
-    
+
 
     // ===== INVENTORY CLICKS FUNCTIONS =====
 
-     /// <summary>
+    /// <summary>
     /// Clicks an item with a specific name inside a given inventory
     /// </summary>
     /// <remarks>Can specify the type of click and if the inventory needs to be closed after (by default LeftClick and yes)</remarks>
@@ -180,7 +180,7 @@ class ChatBotPlus : ChatBot {
 
 
     // ===== GET CAPITALIZED ITEMNAMES =====
-    
+
     /// <summary>
     /// Returns the name of an item inside a provided container but
     /// with its capitalization from the container
@@ -271,13 +271,13 @@ class MineplexBot : ChatBotPlus {
             this.currentSlot = retrier.getSlot();
             this.currentPage = retrier.getPage();
             this.savedMapCount = retrier.getSavedMapCount();
-            printCurrentData(prefix:"Recovered data");
+            printCurrentData(prefix: "Recovered data");
             RetryManagement.eraseFile();
         }
     }
 
     public void printCurrentData(string prefix = "Current data") {
-        PrintChat(prefix + ": map \"" + this.currentMapName  + "\" for game \"" + this.currentGame  + "\" | slot " + this.currentSlot + "p" + this.currentPage );
+        PrintChat(prefix + ": map \"" + this.currentMapName + "\" for game \"" + this.currentGame + "\" | slot " + this.currentSlot + "p" + this.currentPage);
     }
 
     public async override void AfterGameJoined() {
@@ -327,8 +327,7 @@ class MineplexBot : ChatBotPlus {
             "Give Co-Host",
             "Give Co-Host"
         );
-        foreach (String player in this.TRUSTED_PLAYERS)
-        {
+        foreach (String player in this.TRUSTED_PLAYERS) {
             clickInventory(coOwnContainer, player);
         }
         PrintChat("Done setting all trusted players to co owners !");
@@ -339,11 +338,15 @@ class MineplexBot : ChatBotPlus {
     /// </summary>
     /// <remarks>If none specified, toggles all players in TRUSTED_PLAYERS</remarks>
     private void addToWhitelist(List<string> players) {
-        //note: nasty bug w that one since "dxrrymxxnkid" is in another color 
-        if (players.Count == 0)
+        if (players.Count == 0) {
             SendText("/whitelist " + String.Join(" ", this.TRUSTED_PLAYERS));
-        else
+            PrintChat("Done toggling trusted players from the whitelist");
+        } else {
+            // note: nasty bug w that one if one of the player is the player running the cmd
+            // as the username will be gray and fuck up parsing (unneeded; won't fix for now) 
             SendText("/whitelist " + String.Join(" ", players.ToArray()));
+            PrintChat("Done toggling " + String.Join(", ", players.ToArray()) + " from the whitelist");
+        }
     }
 
 
@@ -522,6 +525,47 @@ class MineplexBot : ChatBotPlus {
     }
 
     /// <summary>
+    /// Counts how many maps a game has
+    /// </summary>
+    private async Task countMapsGame(List<string> args) {
+        if (args.Count == 0) {
+            PrintChat("No game specified !");
+            return;
+        }
+
+        string gameName = String.Join(" ", args.ToArray()).ToLower();
+
+        (Container container, int index) = await searchGamePage(null, gameName);
+
+        if (container == null || index == 0) {
+            PrintChat("Specified game invalid (" + gameName + ")");
+            return;
+        }
+
+        Container mapChooseContainer = await clickInventoryContainer(container, index, "set map", WindowActionType.RightClick);
+        gameName = getCapitalizedItemName(container, gameName);
+
+        (int mapCount, int pageCount) = await recurCountMapsGame(mapChooseContainer, 0, 1);
+
+        PrintChat("Game " + gameName + " has " + mapCount + " maps spread across " + mapCount + " maps.");
+
+    }
+    private async Task<(int, int)> recurCountMapsGame(Container container, int initialCount, int initialPage) {
+        foreach ((int _, Item item) in container.Items)
+        {
+            if (item.Type == ItemType.Paper) 
+                initialCount++;
+        }
+        if (hasNextButton(container)) {
+            initialPage++;
+            await clickNextButton(container);
+            return await recurCountMapsGame(container, initialCount, initialPage);
+        }
+        return (initialCount, initialPage);
+    }
+
+
+    /// <summary>
     /// Starts a game
     /// If nothing in args, will run instantly (shiftclick)
     /// Otherwise, will click normally (and so wait 10s)
@@ -602,7 +646,7 @@ class MineplexBot : ChatBotPlus {
     // String to match for if we receive a DM
     private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no
-    private bool IS_NANO = false;
+    private bool IS_NANO = true;
     // trusted players
     private string[] TRUSTED_PLAYERS = new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" };
     // mp map selector only uses 7 slots, those are the slots outside
@@ -670,7 +714,7 @@ class MineplexBot : ChatBotPlus {
                 LogToConsole("Unloading bot");
                 UnloadBot();
                 break;
-            
+
             case "pd":
             case "printdata":
                 printCurrentData();
@@ -699,6 +743,12 @@ class MineplexBot : ChatBotPlus {
             case "co-owner":
             case "co-own":
                 await giveCoOwn(args);
+                break;
+            
+            case "count":
+            case "countm":
+            case "countmaps":
+                await countMapsGame(args);
                 break;
 
             case "caa":
@@ -892,7 +942,7 @@ class CSVManagement {
 
     private static string standalonePath = ".data/info.txt";
     private string csvPath;
-    
+
     private string csvLine;
 
     public CSVManagement(string map, string author, string game, bool isNano) {

@@ -3948,11 +3948,14 @@ class MineplexBot : ChatBotPlus {
     /// Sets the options
     /// </summary>
     private async Task setOptions() {
+        string[] shouldBeEnabled = { "Whitelist" };
         bool changed = false;
         Container melon = await openMelon();
         Container settings = await clickInventoryContainer(melon, "Server Settings", "Server Settings");
         foreach ((int index, Item item) in settings.Items) {
-            if (item.Type == ItemType.LimeDye) {
+            // either if on & needs to be off or if off & needs to be on
+            if ((item.Type == ItemType.LimeDye && !shouldBeEnabled.Contains(GetVerbatim(item.DisplayName))) ||
+                item.Type == ItemType.GrayDye && shouldBeEnabled.Contains(GetVerbatim(item.DisplayName))) {
                 clickInventory(settings, index, close: false);
                 changed = true;
             }
@@ -4196,7 +4199,7 @@ class MineplexBot : ChatBotPlus {
 
         if (items[0]["text"].ToString() == "Map - ")
             grabMapAuthor(items);
-        
+
         if (!items[count - 2].ToString().Contains("\"text\":"))
             return;
         if (!items[count - 1].ToString().Contains("\"extra\":"))

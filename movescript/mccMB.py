@@ -93,7 +93,7 @@ def process_zips(map: Map) -> str | None:
     toRemove: list[str] = []
     for file in os.listdir(SAVES):
         # Remove folders
-        if file in ["eu_mineplex_com", "us_mineplex_com", "clans_mineplex_com"]:
+        if "mineplex_com" in file and not ".zip" in file:
             toRemove.append(file)
 
         # Add all zips to list

@@ -73,8 +73,10 @@ class FileLoader():
         # Copy untouched files
         shutil.copy("files/start.sh", path + "start.sh")
         shutil.copy("files/mover.py", path + "mover.py")
-        shutil.copy("files/libs/Newtonsoft.Json.dll",
-                    path + "scripts/libs/Newtonsoft.Json.dll")
+        if not os.path.isfile(path + "scripts/libs/Newtonsoft.Json.dll"):
+            # Lib itself never changes, might as well have a check for it before copying
+            shutil.copy("files/libs/Newtonsoft.Json.dll",
+                        path + "scripts/libs/Newtonsoft.Json.dll")
 
     def save_to_every_path(self):
         for path in self.pathes:

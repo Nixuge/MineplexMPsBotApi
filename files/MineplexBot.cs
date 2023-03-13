@@ -3333,7 +3333,7 @@ public enum WindowActionType {
 // ===== RUN INSTALL.SH TO STRIP & MOVE =====
 // =====    TO THE PROPER DIRECTORY     =====
 
-
+//<SPLITHERE>
 //MCCScript 1.0
 
 //using System.Threading.Tasks;
@@ -3343,7 +3343,7 @@ public enum WindowActionType {
 //dll ./scripts/libs/Newtonsoft.Json.dll
 //using Newtonsoft.Json.Linq;
 
-// MCC.LoadBot(new MineplexBot());
+//<LOADBOT>
 
 //MCCScript Extensions
 
@@ -4003,7 +4003,7 @@ class MineplexBot : ChatBotPlus {
     // ========== VARS HERE ==========
     // name of the private server to join
     //private string SERVER_NAME = "COM-BridgesForever-1";
-    private string SERVER_NAME = "dxrrymxxnkid-1";
+    private string SERVER_NAME = "<SERVERNAME>";
     // String to match for if we receive a DM
     private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no

@@ -1,0 +1,7 @@
+{
+    "server_name": "COM-GuildName-1",
+    "pathes": [
+        "/home/nix/bots/nixugeconsoleclient1/",
+        "/home/nix/bots/nixugeconsoleclient2/"
+    ]
+}

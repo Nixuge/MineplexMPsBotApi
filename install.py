@@ -5,8 +5,6 @@ import os
 import json
 
 
-
-
 def grab_data() -> dict | None:
     if not os.path.isfile("install_config.json"):
         print("install_config.json file missing, please add it. You can refeer to the install_config_example.json file.")
@@ -30,10 +28,12 @@ def grab_data() -> dict | None:
 
         return data
 
+
 class FileLoader():
     pathes = list[str]
     mccini: str
     mpbotcs: str
+
     def __init__(self, data: dict) -> None:
         self.pathes = data["pathes"]
 
@@ -42,10 +42,10 @@ class FileLoader():
         with open("files/config/MinecraftClient.ini") as f:
             self.mccini = f.read() \
                 .replace("<SERVERNAME>", server_name)
-        
+
         with open("files/MineplexBot.cs") as f:
             self.mpbotcs = f.read() \
-                .split("//<SPLITHERE>")[1] \
+                .split("//<SPLITHERE>\n")[1] \
                 .replace("<SERVERNAME>", server_name) \
                 .replace("//<LOADBOT>", "MCC.LoadBot(new MineplexBot());")
 
@@ -69,15 +69,17 @@ class FileLoader():
 
         with open(path + "scripts/MineplexBot.cs", "w") as f:
             f.write(self.mpbotcs)
-        
+
         # Copy untouched files
         shutil.copy("files/start.sh", path + "start.sh")
         shutil.copy("files/mover.py", path + "mover.py")
-        shutil.copy("files/libs/Newtonsoft.Json.dll", path + "scripts/libs/Newtonsoft.Json.dll")
+        shutil.copy("files/libs/Newtonsoft.Json.dll",
+                    path + "scripts/libs/Newtonsoft.Json.dll")
 
     def save_to_every_path(self):
         for path in self.pathes:
             self.save_to_path(path)
+
 
 def main():
     data = grab_data()
@@ -85,12 +87,6 @@ def main():
         return
     floader = FileLoader(data)
     floader.save_to_every_path()
-
-
-    # pathes: list[str] = data["pathes"]
-    # for path in pathes:
-        
-        
 
 
 if __name__ == "__main__":

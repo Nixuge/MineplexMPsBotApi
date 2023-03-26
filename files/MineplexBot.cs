@@ -4007,7 +4007,7 @@ class MineplexBot : ChatBotPlus {
     // String to match for if we receive a DM
     private string DM_RECOGNIZE = " > a4y ";
     // if the mp is a nano mp or no
-    private bool IS_NANO = true;
+    private bool IS_NANO = false;
     // trusted players
     private string[] TRUSTED_PLAYERS = new string[] { "wf0", "dxrrymxxnkid", "nixuge", "fc0", "a4y" };
     // mp map selector only uses 7 slots, those are the slots outside

@@ -7,6 +7,7 @@
 
 from dataclasses import dataclass
 import os
+from pprint import pprint
 import pyperclip
 import shutil
 import time
@@ -17,6 +18,7 @@ MOVE_ZIP_AUTOMATICALLY = True
 GAME_PATH = f"/home/nix/Mineplex Backup/"
 
 SAVES = "/home/nix/.local/share/multimc/instances/1.8.9 pvp - worlddl/.minecraft/saves/"
+BACKUPS = "/home/nix/.local/share/multimc/instances/1.8.9 pvp - worlddl/.minecraft/backups/"
 
 class bcolors:
     HEADER = '\033[95m'
@@ -87,7 +89,27 @@ class Map:
         return GAME_PATH + self.filePath
 
 
-def process_zips(map: Map) -> str | None:
+def process_zips_forge(map: Map) -> str | None:
+    for file in os.listdir(SAVES):
+        os.system(f"rm -r \"{SAVES}{file}\"")  # dangeroous
+    
+    zips = os.listdir(BACKUPS)
+
+    if len(zips) > 1:
+        print(bcolors.WARNING + "You've got more than 1 zip in the backup folder. Using the latest one." + bcolors.ENDC)
+    elif len(zips) == 0:
+        print(bcolors.FAIL + "No zips found to process." + bcolors.ENDC)
+        return
+
+    zip = sorted(zips)[-1]
+    zipname = BACKUPS + map.name + ".zip"
+    os.rename(BACKUPS + zip, zipname)
+    
+    return zipname
+
+def process_zips_1_8_9a_liteloader(map: Map) -> str | None:
+    # Will probably be deleted soon, as the Forge mod has everything you need
+
     # Rename ZIP file to map name
     zips: list[str] = []
     toRemove: list[str] = []
@@ -165,12 +187,12 @@ def move_zip(zipname: str, map: Map) -> bool:
 
 
 if __name__ == "__main__":
-    map = Map("../client/.data/info.txt")
+    map = Map(".data/info.txt")
 
     # print_info(map)
 
     # Process the files
-    zipname = process_zips(map)
+    zipname = process_zips_forge(map)
 
     # Move the zip
     move_success = False

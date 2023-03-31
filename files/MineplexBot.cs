@@ -3674,9 +3674,17 @@ class MineplexBot : ChatBotPlus {
             "Give Co-Host",
             "Give Co-Host"
         );
-        foreach (string player in this.TRUSTED_PLAYERS) {
-            clickInventory(coOwnContainer, player);
+        // List<string> VS string[], easier to do it like that
+        if (players.Count == 0) {
+            foreach (string player in this.TRUSTED_PLAYERS) {
+                clickInventory(coOwnContainer, player);
+            }
+        } else {
+            foreach (string player in players) {
+                clickInventory(coOwnContainer, player);
+            }
         }
+
         PrintChat("Done setting all trusted players to co owners !");
     }
 
@@ -4183,12 +4191,18 @@ class MineplexBot : ChatBotPlus {
             case "reload":
                 reloadBot(args);
                 break;
-
+            
             case "setopts":
             case "setoptions":
                 await setOptions();
                 break;
             
+            case "setup":
+                await giveCoOwn(args);
+                addToWhitelist(args);
+                await setOptions();
+                break;
+
             case "savespeedbuildernames":
                 await saveAllSpeedBuilderPracticeMapNames();
                 break;

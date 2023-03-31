@@ -3685,7 +3685,9 @@ class MineplexBot : ChatBotPlus {
             }
         }
 
+        CloseInventory(coOwnContainer);
         PrintChat("Done setting all trusted players to co owners !");
+        
     }
 
     /// <summary>

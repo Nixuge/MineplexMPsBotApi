@@ -3734,17 +3734,71 @@ class MineplexBot : ChatBotPlus {
     /// Clicks on the "Next Map" arrow on the provided Container
     /// </summary>
     /// <remarks>See the commentary inside the function to see why this is required</remarks>
-    private async Task clickNextButton(Container maps) {
+    private async Task clickNextButton(Container maps, int nextPageIndex = -1, int delay = -1) {
         // IMPORTANT NOTE:
         // Due to a nasty bug (-1h30) having an inventory open with the same
         // name as the previous one doesn't call OnInventoryOpen(...)
         // and actually keeps the same id BUT not the same object
         // So just setting an arbitrary (pretty high) delay here to 
         // get through that
-        clickInventory(maps, this.NEXT_PAGE_INDEX, close: false);
-        await Task.Delay(this.NEXT_INVENTORY_DELAY);
+        if (nextPageIndex == -1) {
+            nextPageIndex = this.NEXT_PAGE_INDEX; // Can't use that directly in the func declaration
+        }
+        if (delay == -1) {
+            delay = this.NEXT_INVENTORY_DELAY;
+        }
+        clickInventory(maps, nextPageIndex, close: false);
+        await Task.Delay(delay);
     }
 
+    /// <summary>
+    /// Saves all speed builders practice map names into a txt file
+    /// </summary>
+    private async Task saveAllSpeedBuilderPracticeMapNames() {
+        // Get the inventory (opens at game start, no need to run a command to open it)
+        Container inventory = null;
+        foreach ((int index, Container container) in GetInventories()) {
+            if (MatchesNoCap(container.Title, "Practice Menu")) {
+                inventory = container;
+                break;
+            }
+        }
+        
+        // Loop over every item in the inventory & save the names from Paper items
+        int iteration = 0;
+        while (true) {
+            Dictionary<int, Item> items = inventory.Items;
+
+            foreach ((int _, Item item) in items) {
+                IEnumerable<string> fileLines = File.ReadLines("owo.txt");
+
+                if (item.Type == ItemType.Paper) {
+                    string name = GetVerbatim(item.DisplayName);
+                    if (!fileLines.Contains(name)) {
+                        File.AppendAllTextAsync("owo.txt", name + "\n");
+                        LogToConsole(name);
+                    }
+                }
+            }
+
+            // If nothing/no paper in the 43rd slot (bottom-1;right-1)
+            // It means the page isn't full and that it's the last one
+            // In which case end the search
+            if (!items.ContainsKey(43) || items[43].Type != ItemType.Paper) {
+                LogToConsole("ENDED!");
+                break;
+            }
+
+            // Otherwise click on the next button & increment the counter
+            // Note that since the delay is quite low, it can cause page skips; that's on purpose,
+            // it's kind of a bruteforce to avoid getting kicked mid save (thanks GWEN).
+            // This should be run multiple times to be sure every page got looped through.
+            // The rest of the function is made to handle multiple passes.
+            iteration++;
+            LogToConsole("=====ITERATION " + iteration + "=====");
+            await clickNextButton(inventory, nextPageIndex:53, delay:50);
+        }
+    }
 
     /// <summary>
     /// Selects a map from the current game using the current index & page. 
@@ -4133,6 +4187,10 @@ class MineplexBot : ChatBotPlus {
             case "setopts":
             case "setoptions":
                 await setOptions();
+                break;
+            
+            case "savespeedbuildernames":
+                await saveAllSpeedBuilderPracticeMapNames();
                 break;
 
             default:

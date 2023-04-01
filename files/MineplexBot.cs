@@ -3724,12 +3724,21 @@ class MineplexBot : ChatBotPlus {
         }
 
         this.currentSlot = int.Parse(args[0]);
-        PrintChat("Set slot to " + args[0]);
+        this.currentPage = 0;
+        // PrintChat("Set slot to " + args[0]);
 
         if (args.Count > 1) {
             this.currentPage = int.Parse(args[1]);
-            PrintChat("Set page to " + args[1]);
+            // PrintChat("Set page to " + args[1]);
         }
+        
+        List<string> startArgs = new List<string>();
+
+        if (args.Count < 2) {
+            startArgs.Add("do not start game");
+        }
+
+        clickOnMap(false, startArgs);
     }
 
 

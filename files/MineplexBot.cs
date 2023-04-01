@@ -4067,8 +4067,10 @@ class MineplexBot : ChatBotPlus {
             PrintChat("Specified map invalid (" + mapName + ") for game " + this.currentGame);
             return false;
         } else {
+            this.currentSlot = mapItemindex;
+            // Can't set page easily unfortunately
             clickInventory(mapsRightPage, mapItemindex);
-            PrintChat("Selected map " + mapName + " for game " + this.currentGame);
+            PrintChat("Selected map " + mapName + " for game " + this.currentGame + "(slot " + mapItemindex + ")");
             return true;
         }
     }

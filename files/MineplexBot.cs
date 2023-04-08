@@ -4068,6 +4068,7 @@ class MineplexBot : ChatBotPlus {
             return false;
         } else {
             this.currentSlot = mapItemindex;
+            this.currentMapName = mapName;
             // Can't set page easily unfortunately
             clickInventory(mapsRightPage, mapItemindex);
             PrintChat("Selected map " + mapName + " for game " + this.currentGame + "(slot " + mapItemindex + ")");
@@ -4130,14 +4131,12 @@ class MineplexBot : ChatBotPlus {
                 break;
 
             case "map":
-                if (await chooseMap(args))
-                    await startGame(null);
+                await chooseMap(args);
                 break;
 
-            case "mapns":
-            case "mapn":
             case "maps":
-                await chooseMap(args);
+                if (await chooseMap(args))
+                    await startGame(null);
                 break;
 
             case "whitelist":
